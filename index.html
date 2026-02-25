@@ -1,574 +1,533 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Menu</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu Launcher</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  <!-- ============================================================
-       BASE STYLES — layout & structure only, no colors/fonts here
-       ============================================================ -->
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 20px 80px;
+  overflow-x: hidden;
+}
 
-    body {
-      text-align: center;
-      min-height: 100vh;
-      padding: 15px;
-      padding-bottom: 80px;
-      position: relative;
-      overflow-x: hidden;
-      overflow-y: auto;
-    }
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
+}
+.background-decoration {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  overflow: hidden; z-index: 0; pointer-events: none;
+}
+.particle {
+  position: absolute; width: 4px; height: 4px;
+  background: rgba(255,215,0,0.3); border-radius: 50%;
+  animation: float 6s infinite ease-in-out;
+}
+.particle:nth-child(1){left:10%;top:20%;animation-delay:0s}
+.particle:nth-child(2){left:80%;top:30%;animation-delay:1s}
+.particle:nth-child(3){left:30%;top:70%;animation-delay:2s}
+.particle:nth-child(4){left:70%;top:60%;animation-delay:1.5s}
+.particle:nth-child(5){left:50%;top:40%;animation-delay:0.5s}
 
-    /* Floating particles */
-    @keyframes fall   { 0%{top:-10%} 100%{top:110%} }
-    @keyframes spin   { 0%{top:-10%;transform:rotate(0deg)} 100%{top:110%;transform:rotate(720deg)} }
-    @keyframes drift  { 0%{top:-10%;transform:translateX(0) rotate(0deg)} 100%{top:110%;transform:translateX(80px) rotate(360deg)} }
+.content-wrapper {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 1200px;
+  animation: fadeIn 0.8s ease-out;
+}
 
-    .particle {
-      position: fixed;
-      font-size: 22px;
-      opacity: 0.5;
-      pointer-events: none;
-      z-index: 1;
-    }
-    .particle:nth-child(1){left:10%;animation-duration:8s;animation-delay:0s}
-    .particle:nth-child(2){left:20%;animation-duration:10s;animation-delay:1s}
-    .particle:nth-child(3){left:30%;animation-duration:9s;animation-delay:2s}
-    .particle:nth-child(4){left:40%;animation-duration:11s;animation-delay:0.5s}
-    .particle:nth-child(5){left:50%;animation-duration:7s;animation-delay:1.5s}
-    .particle:nth-child(6){left:60%;animation-duration:9.5s;animation-delay:2.5s}
-    .particle:nth-child(7){left:70%;animation-duration:8.5s;animation-delay:1s}
-    .particle:nth-child(8){left:80%;animation-duration:10.5s;animation-delay:0s}
-    .particle:nth-child(9){left:90%;animation-duration:9s;animation-delay:2s}
+h1 {
+  font-size: clamp(40px, 8vw, 70px); margin-bottom: 10px;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: titleGlow 3s ease-in-out infinite;
+  font-weight: 800; letter-spacing: 2px;
+}
+@keyframes titleGlow {
+  0%,100%{filter:drop-shadow(0 0 10px rgba(255,215,0,.5))}
+  50%    {filter:drop-shadow(0 0 20px rgba(255,215,0,.8))}
+}
+.subtitle { font-size: clamp(18px,3vw,24px); margin-bottom: 50px; color: #ccc; letter-spacing: 1px; }
 
-    /* Header */
-    .header {
-      margin-bottom: 25px;
-      position: relative;
-      z-index: 10;
-      animation: slideDown 0.6s ease-out;
-    }
-    @keyframes slideDown {
-      from { opacity:0; transform:translateY(-30px) }
-      to   { opacity:1; transform:translateY(0) }
-    }
-    h1 {
-      font-size: clamp(40px, 7vw, 68px);
-      margin: 15px 0 8px 0;
-      letter-spacing: 2px;
-      animation: glow 2s ease-in-out infinite;
-    }
-    h2 {
-      font-size: clamp(18px, 3vw, 28px);
-      font-style: italic;
-      letter-spacing: 1px;
-    }
+/* ── Launcher buttons ── */
+.launcher { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; padding: 20px; }
 
-    /* Nav buttons */
-    .nav-buttons {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 25px;
-      position: relative;
-      z-index: 10;
-    }
-    .nav-btn {
-      padding: 10px 22px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      text-decoration: none;
-      display: inline-block;
-      letter-spacing: 1px;
-    }
-    .nav-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+.button {
+  width: 280px; height: 180px; border-radius: 25px;
+  font-size: 26px; font-weight: bold; cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+  position: relative; overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none; color: white;
+}
+.button::before {
+  content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  transition: left 0.5s;
+}
+.button:hover::before { left: 100%; }
+.button:hover { transform: translateY(-10px) scale(1.05); box-shadow: 0 20px 40px rgba(0,0,0,0.4); border-color: rgba(255,215,0,0.5); }
+.button:active { transform: translateY(-5px) scale(1.02); }
+.button:focus  { outline: 3px solid #ffd700; outline-offset: 3px; }
 
-    /* Add-item form */
-    .form-container {
-      max-width: 500px;
-      margin: 0 auto 25px auto;
-      position: relative;
-      z-index: 10;
-    }
-    #addItemForm {
-      display: none;
-      padding: 25px;
-      border-radius: 15px;
-      animation: slideDown 0.4s ease-out;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    }
-    #addItemForm h3 { margin-bottom: 18px; font-size: 22px; }
-    #addItemForm label {
-      display: block;
-      text-align: left;
-      margin-bottom: 6px;
-      font-weight: bold;
-    }
-    #addItemForm select,
-    #addItemForm input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 14px;
-      border-radius: 8px;
-      font-size: 15px;
-      transition: border-color 0.3s;
-    }
-    #addItemForm select:focus,
-    #addItemForm input:focus { outline: none; }
-    #saveNewItem {
-      width: 100%;
-      padding: 11px;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 17px;
-      font-weight: bold;
-      transition: all 0.3s;
-    }
-    #saveNewItem:hover { transform: translateY(-2px); }
+.main        { background: linear-gradient(145deg,#2196f3,#1565c0); }
+.main:hover  { background: linear-gradient(145deg,#42a5f5,#1976d2); }
+.christmas   { background: linear-gradient(145deg,#c62828,#2e7d32); }
+.christmas:hover { background: linear-gradient(145deg,#e53935,#43a047); }
+.thanksgiving{ background: linear-gradient(145deg,#ff9800,#6d4c41); }
+.thanksgiving:hover { background: linear-gradient(145deg,#ffa726,#795548); }
+.baseball    { background: linear-gradient(145deg,#cc0000,#990000); }
+.baseball:hover { background: linear-gradient(145deg,#e60000,#cc0000); }
 
-    /* Menu grid */
-    .menu-container {
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      position: relative;
-      z-index: 10;
-      animation: fadeIn 0.8s ease-out 0.2s backwards;
-    }
-    @keyframes fadeIn {
-      from { opacity:0; transform:translateY(20px) }
-      to   { opacity:1; transform:translateY(0) }
-    }
-    .menu-header {
-      font-size: clamp(24px, 3.5vw, 36px);
-      margin-bottom: 12px;
-      text-decoration: underline;
-      text-underline-offset: 8px;
-      letter-spacing: 3px;
-      font-weight: bold;
-    }
-    .menu-column {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-    }
+.button:nth-child(1){animation:fadeIn .6s ease-out .2s backwards}
+.button:nth-child(2){animation:fadeIn .6s ease-out .4s backwards}
+.button:nth-child(3){animation:fadeIn .6s ease-out .6s backwards}
+.button:nth-child(4){animation:fadeIn .6s ease-out .8s backwards}
 
-    /* Items */
-    .item {
-      width: 100%;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
-      position: relative;
-      border-radius: 16px;
-    }
-    .item:hover { transform: translateY(-4px) scale(1.02); }
-    .item img {
-      width: 55px;
-      height: 55px;
-      object-fit: cover;
-      border-radius: 10px;
-      flex-shrink: 0;
-      transition: transform 0.3s;
-    }
-    .item:hover img { transform: rotate(-5deg) scale(1.1); }
-    .item-text { text-align: left; flex: 1; min-width: 0; }
-    .item-name {
-      font-size: clamp(13px, 1.6vw, 19px);
-      margin: 0 0 3px 0;
-      font-weight: 600;
-      word-wrap: break-word;
-    }
-    .item-price {
-      font-size: clamp(11px, 1.4vw, 16px);
-      font-weight: bold;
-    }
+/* ── Admin tab bar ── */
+.admin-tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: #111; border-top: 2px solid #ffd700;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 10px 20px; z-index: 100;
+}
+.admin-tab-bar-label { color: #888; font-size: 14px; }
+.admin-open-btn {
+  background: linear-gradient(145deg,#ffd700,#ffb300);
+  color: #1a1a1a; font-size: 16px; font-weight: bold;
+  border: none; border-radius: 10px; padding: 10px 28px;
+  cursor: pointer; transition: all 0.3s; letter-spacing: 1px;
+}
+.admin-open-btn:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(255,215,0,0.4); }
 
-    /* Out of stock */
-    .out-of-stock { opacity: 0.5; text-decoration: line-through; }
-    .out-of-stock img { filter: grayscale(100%); }
-    .out-of-stock::after {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8);
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: bold;
-      white-space: nowrap;
-    }
+/* ── Admin overlay ── */
+#adminOverlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88); z-index: 200;
+  overflow-y: auto; padding: 30px 20px 80px;
+}
+#adminOverlay.open { display: block; }
 
-    /* Remove button */
-    .remove-btn {
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-left: auto;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s ease;
-      flex-shrink: 0;
-    }
-    .item:hover .remove-btn { opacity:1; pointer-events:auto; }
-    .remove-btn:hover { transform: scale(1.1); }
+.admin-panel {
+  max-width: 920px; margin: 0 auto;
+  background: #1e1e1e; border: 2px solid #ffd700;
+  border-radius: 20px; padding: 30px;
+  animation: fadeIn 0.3s ease-out;
+}
+.admin-panel-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+.admin-panel h2 { font-size: 30px; color: #ffd700; letter-spacing: 2px; }
+.admin-sub { color: #888; font-size: 13px; margin-bottom: 22px; }
+.close-admin-btn {
+  background: #2a2a2a; color: #fff; border: 1px solid #444;
+  border-radius: 8px; padding: 8px 16px; font-size: 15px;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+}
+.close-admin-btn:hover { background: #444; }
 
-    /* Logo */
-    .bottom-right-image {
-      position: fixed;
-      bottom: 20px; right: 20px;
-      width: 120px; height: auto;
-      z-index: 9999;
-      transition: transform 0.3s;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
-    }
-    .bottom-right-image:hover { transform: scale(1.1) rotate(-5deg); }
+/* Category tabs */
+.admin-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 2px solid #2a2a2a; padding-bottom: 10px; }
+.admin-tab {
+  padding: 8px 16px; border-radius: 8px 8px 0 0; border: none;
+  background: #2a2a2a; color: #888; font-size: 14px; font-weight: bold;
+  cursor: pointer; transition: all 0.2s;
+}
+.admin-tab.active,.admin-tab:hover { background: #ffd700; color: #1a1a1a; }
 
-    /* Loading message */
-    #loadingMsg {
-      font-size: 20px;
-      padding: 40px;
-      font-style: italic;
-    }
+.admin-section { display: none; }
+.admin-section.active { display: block; }
 
-    /* Responsive */
-    @media (max-width: 1024px) { .menu-container { grid-template-columns: repeat(2,1fr); } }
-    @media (max-width: 768px)  {
-      body { padding: 10px; padding-bottom: 90px; }
-      .menu-container { grid-template-columns: repeat(2,1fr); gap:8px; }
-      .item img { width:42px; height:42px; }
-      .bottom-right-image { width:80px; }
-    }
-    @media (max-width: 480px) {
-      .menu-container { grid-template-columns: 1fr; }
-      .item img { width:38px; height:38px; }
-    }
-    @media (hover: none) { .remove-btn { opacity:1; pointer-events:auto; } }
-  </style>
+/* Item rows */
+.admin-item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+.admin-item-row {
+  display: flex; align-items: center; gap: 10px;
+  background: #252525; border: 1px solid #383838; border-radius: 10px; padding: 10px 14px;
+  transition: border-color 0.2s;
+}
+.admin-item-row:hover { border-color: #ffd700; }
+.admin-item-row img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 2px solid #444; flex-shrink: 0; }
+.admin-item-info { flex: 1; text-align: left; min-width: 0; }
+.admin-item-info .iname { font-size: 15px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-item-info .iprice { font-size: 13px; color: #ffd700; }
+.admin-item-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+.oos-toggle { padding: 5px 11px; border-radius: 6px; border: none; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.oos-toggle.in-stock  { background: #2e7d32; color: #fff; }
+.oos-toggle.out-stock { background: #b71c1c; color: #fff; }
+.oos-toggle:hover { opacity: 0.85; transform: scale(1.04); }
+.edit-btn-a { padding: 5px 11px; background: #1565c0; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.edit-btn-a:hover { background: #1e88e5; }
+.del-btn-a  { padding: 5px 9px; background: #7a0c02; color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+.del-btn-a:hover { background: #c62828; }
+
+/* Add form */
+.add-item-form { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 18px; }
+.add-item-form h3 { color: #ffd700; margin-bottom: 14px; font-size: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.form-row.full { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.form-group label { font-size: 12px; color: #999; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; }
+.form-group input, .form-group select {
+  padding: 9px 12px; border-radius: 8px; border: 2px solid #383838;
+  background: #1a1a1a; color: #fff; font-size: 14px; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #ffd700; }
+.add-btn-a {
+  width: 100%; padding: 11px; background: linear-gradient(145deg,#ffd700,#ffb300);
+  color: #1a1a1a; border: none; border-radius: 10px; font-size: 16px; font-weight: bold;
+  cursor: pointer; margin-top: 4px; transition: all 0.3s;
+}
+.add-btn-a:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); transform: translateY(-2px); }
+
+/* Status bar */
+.status-bar { text-align: center; font-size: 13px; color: #777; margin-top: 18px; padding: 8px 12px; background: #141414; border-radius: 8px; border: 1px solid #2a2a2a; }
+.status-bar b { color: #ffd700; }
+
+/* Export */
+.export-area { width: 100%; height: 220px; background: #111; color: #7fff7f; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; font-size: 12px; font-family: monospace; resize: vertical; margin-top: 10px; }
+.export-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.exp-btn { padding: 10px 20px; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+.exp-btn.green { background: #2e7d32; }
+.exp-btn.green:hover { background: #43a047; }
+.exp-btn.blue  { background: #1565c0; }
+.exp-btn.blue:hover  { background: #1e88e5; }
+
+/* Edit modal */
+#editModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; align-items: center; justify-content: center; }
+#editModal.open { display: flex; }
+.edit-box { background: #1e1e1e; border: 2px solid #ffd700; border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; animation: fadeIn 0.2s ease-out; }
+.edit-box h3 { color: #ffd700; margin-bottom: 16px; font-size: 20px; }
+.edit-field { width: 100%; padding: 9px 12px; border-radius: 8px; border: 2px solid #383838; background: #1a1a1a; color: #fff; font-size: 14px; margin-bottom: 12px; display: block; }
+.edit-field:focus { outline: none; border-color: #ffd700; }
+.edit-actions { display: flex; gap: 10px; margin-top: 6px; }
+.save-edit { flex:1; padding:10px; background:linear-gradient(145deg,#ffd700,#ffb300); color:#1a1a1a; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; }
+.cancel-edit { padding:10px 18px; background:#2a2a2a; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+@media(max-width:768px){
+  .launcher{gap:20px;padding:10px}
+  .button{width:100%;max-width:350px;height:150px;font-size:22px}
+  .form-row{grid-template-columns:1fr}
+  .admin-item-actions{flex-wrap:wrap}
+}
+</style>
 </head>
 <body>
 
-  <!-- Floating particles (emojis assigned by JS based on theme) -->
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
+<div class="background-decoration">
+  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div>
+</div>
 
-  <div class="header">
-    <h1 id="pageTitle">Loading...</h1>
-    <h2 id="pageSubtitle"></h2>
+<div class="content-wrapper">
+  <h1>🍽️ Menu Launcher</h1>
+  <p class="subtitle">Select a theme to view the menu</p>
+
+  <div class="launcher">
+    <a href="main/index.html"               class="button main"        aria-label="Main menu">🏠 Main Menu</a>
+    <a href="Christmas theme/index.html"    class="button christmas"   aria-label="Christmas menu">🎄 Christmas Menu</a>
+    <a href="Thanksgiving theme/index.html" class="button thanksgiving" aria-label="Thanksgiving menu">🦃 Thanksgiving Menu</a>
+    <a href="Baseball theme/index.html"     class="button baseball"    aria-label="Baseball day menu">⚾ Baseball Day</a>
   </div>
+</div>
 
-  <div class="nav-buttons">
-    <a href="../index.html" class="nav-btn back-btn" id="backBtn">⬅️ Back to Launcher</a>
-    <button id="addItemBtn" class="nav-btn">➕ Add New Item</button>
-  </div>
+<!-- ── Admin tab bar ── -->
+<div class="admin-tab-bar">
+  <span class="admin-tab-bar-label">Staff only →</span>
+  <button class="admin-open-btn" onclick="openAdmin()">⚙️ Admin Panel</button>
+</div>
 
-  <div class="form-container">
-    <div id="addItemForm">
-      <h3>Add Menu Item</h3>
-      <label for="newCategory">Category:</label>
-      <select id="newCategory"></select>
-      <label for="newName">Item Name:</label>
-      <input id="newName" type="text" placeholder="e.g., Lemonade">
-      <label for="newPrice">Price (numbers only, e.g. 2.50):</label>
-      <input id="newPrice" type="number" step="0.01" min="0" placeholder="2.50">
-      <label for="newImage">Image path (e.g., images/lemonade.jpg):</label>
-      <input id="newImage" type="text" placeholder="images/lemonade.jpg">
-      <button id="saveNewItem">Add Item</button>
+<!-- ── Admin Overlay ── -->
+<div id="adminOverlay">
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>⚙️ Admin Panel</h2>
+        <p class="admin-sub">Add, edit, remove items & toggle stock. Use <b style="color:#ffd700">Export JSON</b> tab to save your changes to <b style="color:#ffd700">items.json</b>.</p>
+      </div>
+      <button class="close-admin-btn" onclick="closeAdmin()">✕ Close</button>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('foodColumn',this)">🌮 Food</button>
+      <button class="admin-tab"        onclick="switchTab('drinkColumn',this)">🥤 Drinks</button>
+      <button class="admin-tab"        onclick="switchTab('snackColumn',this)">🍬 Snacks</button>
+      <button class="admin-tab"        onclick="switchTab('snackColumn2',this)">🍿 More Snacks</button>
+      <button class="admin-tab"        onclick="switchTab('export',this)">📋 Export JSON</button>
+    </div>
+
+    <!-- Food -->
+    <div class="admin-section active" id="tab-foodColumn">
+      <div class="admin-item-list" id="list-foodColumn"></div>
+      <div class="add-item-form">
+        <h3>➕ Add to Food</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Name</label><input type="text" id="add-name-foodColumn" placeholder="e.g., Hot Dog"></div>
+          <div class="form-group"><label>Price</label><input type="text" id="add-price-foodColumn" placeholder="e.g., 3.00"></div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group"><label>Image Path</label><input type="text" id="add-img-foodColumn" placeholder="e.g., ../images/hotdog.jpg"></div>
+        </div>
+        <button class="add-btn-a" onclick="addItem('foodColumn')">➕ Add Item</button>
+      </div>
+    </div>
+
+    <!-- Drinks -->
+    <div class="admin-section" id="tab-drinkColumn">
+      <div class="admin-item-list" id="list-drinkColumn"></div>
+      <div class="add-item-form">
+        <h3>➕ Add to Drinks</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Name</label><input type="text" id="add-name-drinkColumn" placeholder="e.g., Lemonade"></div>
+          <div class="form-group"><label>Price</label><input type="text" id="add-price-drinkColumn" placeholder="e.g., 2.00"></div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group"><label>Image Path</label><input type="text" id="add-img-drinkColumn" placeholder="e.g., ../images/lemonade.jpg"></div>
+        </div>
+        <button class="add-btn-a" onclick="addItem('drinkColumn')">➕ Add Item</button>
+      </div>
+    </div>
+
+    <!-- Snacks -->
+    <div class="admin-section" id="tab-snackColumn">
+      <div class="admin-item-list" id="list-snackColumn"></div>
+      <div class="add-item-form">
+        <h3>➕ Add to Snacks</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Name</label><input type="text" id="add-name-snackColumn" placeholder="e.g., Fruit Snacks"></div>
+          <div class="form-group"><label>Price</label><input type="text" id="add-price-snackColumn" placeholder="e.g., 1.00"></div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group"><label>Image Path</label><input type="text" id="add-img-snackColumn" placeholder="e.g., ../images/fruitsnacks.jpg"></div>
+        </div>
+        <button class="add-btn-a" onclick="addItem('snackColumn')">➕ Add Item</button>
+      </div>
+    </div>
+
+    <!-- More Snacks -->
+    <div class="admin-section" id="tab-snackColumn2">
+      <div class="admin-item-list" id="list-snackColumn2"></div>
+      <div class="add-item-form">
+        <h3>➕ Add to More Snacks</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Name</label><input type="text" id="add-name-snackColumn2" placeholder="e.g., Trail Mix"></div>
+          <div class="form-group"><label>Price</label><input type="text" id="add-price-snackColumn2" placeholder="e.g., 1.50"></div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group"><label>Image Path</label><input type="text" id="add-img-snackColumn2" placeholder="e.g., ../images/trailmix.jpg"></div>
+        </div>
+        <button class="add-btn-a" onclick="addItem('snackColumn2')">➕ Add Item</button>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="admin-section" id="tab-export">
+      <p style="color:#888;margin-bottom:14px;line-height:1.6;">
+        Click <b style="color:#ffd700">Generate JSON</b> below, then copy the output and save it as
+        <code style="background:#111;padding:2px 6px;border-radius:4px;color:#7fff7f">items.json</code>
+        in your project root. All menu pages load from this file.
+      </p>
+      <div class="export-row">
+        <button class="exp-btn green" onclick="generateExport()">🔄 Generate JSON</button>
+        <button class="exp-btn blue"  onclick="copyExport()">📋 Copy to Clipboard</button>
+      </div>
+      <textarea class="export-area" id="exportArea" readonly placeholder="Click Generate JSON..."></textarea>
+    </div>
+
+    <div class="status-bar" id="statusBar">
+      Total items: <b id="totalCount">0</b> &nbsp;|&nbsp;
+      Out of stock: <b id="oosCount">0</b> &nbsp;|&nbsp;
+      Last saved: <b id="lastSaved">—</b>
     </div>
   </div>
+</div>
 
-  <p id="loadingMsg">Loading menu...</p>
-  <div class="menu-container" id="menuContainer" style="display:none"></div>
+<!-- Edit Modal -->
+<div id="editModal">
+  <div class="edit-box">
+    <h3>✏️ Edit Item</h3>
+    <label style="font-size:12px;color:#999;display:block;margin-bottom:4px;text-align:left">NAME</label>
+    <input type="text" id="edit-name"  class="edit-field" placeholder="Item name">
+    <label style="font-size:12px;color:#999;display:block;margin-bottom:4px;text-align:left">PRICE</label>
+    <input type="text" id="edit-price" class="edit-field" placeholder="e.g., $3.00">
+    <label style="font-size:12px;color:#999;display:block;margin-bottom:4px;text-align:left">IMAGE PATH</label>
+    <input type="text" id="edit-img"   class="edit-field" placeholder="../images/example.jpg">
+    <div class="edit-actions">
+      <button class="save-edit"   onclick="saveEdit()">💾 Save</button>
+      <button class="cancel-edit" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
 
-  <img src="images/logo.png" class="bottom-right-image" alt="Logo">
+<script>
+// ── Default data (used if no localStorage entry exists) ──────────────────────
+const DEFAULT_ITEMS = {
+  foodColumn: [
+    {name:"Walking Taco",   price:"$5.00", img:"../images/walking-tacos.jpg",  outOfStock:false},
+    {name:"Nachos",         price:"$3.00", img:"../images/nachos.jpg",          outOfStock:false},
+    {name:"Pretzel w/ Cheese",price:"$4.00",img:"../images/Pretzel-Cheese.jpg",outOfStock:false},
+    {name:"Hot Dog",        price:"$3.00", img:"../images/hotdog.jpg",          outOfStock:false}
+  ],
+  drinkColumn: [
+    {name:"Soda",           price:"$3.00", img:"../images/soda.webp",           outOfStock:false},
+    {name:"Water",          price:"$3.00", img:"../images/water.jpg",           outOfStock:false},
+    {name:"Sweet Tea",      price:"$3.00", img:"../images/sweet-tea.jpg",       outOfStock:false},
+    {name:"Coffee",         price:"$1.00", img:"../images/coffee.jpg",          outOfStock:false},
+    {name:"Hot Chocolate",  price:"$1.00", img:"../images/Hot-Chocolate.jpg",   outOfStock:false},
+    {name:"Powerade",       price:"$3.00", img:"../images/Powerade.jpg",        outOfStock:false}
+  ],
+  snackColumn: [
+    {name:"Airheads",       price:"$0.25", img:"../images/Airheads.jpg",        outOfStock:false},
+    {name:"Candy",          price:"$2.00", img:"../images/Candy.jpg",           outOfStock:false},
+    {name:"Cotton Candy",   price:"$2.00", img:"../images/Cotton-Candy.jpg",    outOfStock:false},
+    {name:"Gum",            price:"$1.00", img:"../images/gum.jpg",             outOfStock:false},
+    {name:"Seeds",          price:"$1.00", img:"../images/Seeds.jpg",           outOfStock:false},
+    {name:"Cookies",        price:"$1.00", img:"../images/Cookies.jpg",         outOfStock:false}
+  ],
+  snackColumn2: [
+    {name:"Chips",          price:"$1.00", img:"../images/Chips.webp",          outOfStock:false},
+    {name:"Popcorn",        price:"$1.00", img:"../images/Popcorn.jpg",         outOfStock:false},
+    {name:"Jerky",          price:"$2.50", img:"../images/Jerky.jpg",           outOfStock:false},
+    {name:"Pickle",         price:"$1.00", img:"../images/Pickle.jpg",          outOfStock:false}
+  ]
+};
 
-  <script>
-  // ============================================================
-  // LOAD BOTH JSON FILES, THEN BUILD THE PAGE
-  // ============================================================
-  Promise.all([
-    fetch('menu.json').then(r => r.json()),
-    fetch('themes.json').then(r => r.json())
-  ])
-  .then(([menu, themes]) => {
-    const theme = themes[menu.theme] || themes['baseball'];
-    applyTheme(theme);
-    buildPage(menu, theme);
-    loadStatus(menu);
-  })
-  .catch(err => {
-    document.getElementById('loadingMsg').textContent =
-      '⚠️ Could not load menu.json or themes.json. Make sure they are in the same folder as index.html.';
-    console.error(err);
-  });
+let menuData   = JSON.parse(localStorage.getItem('adminMenuData')) || JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+let editTarget = null;
 
-  // ============================================================
-  // APPLY THEME — injects CSS variables based on themes.json
-  // ============================================================
-  function applyTheme(t) {
-    const style = document.createElement('style');
+// ── Persist & status ─────────────────────────────────────────────────────────
+function saveData() {
+  localStorage.setItem('adminMenuData', JSON.stringify(menuData));
+  const t = new Date();
+  document.getElementById('lastSaved').textContent = t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  updateStatus();
+}
 
-    // Background
-    let bg = t.bodyBackground;
-    if (t.bodyStripes && t.bodyStripes !== 'none') {
-      bg = `${t.bodyBackground}, ${t.bodyStripes}`;
-    }
+function updateStatus() {
+  let total=0, oos=0;
+  Object.values(menuData).forEach(col => col.forEach(i => { total++; if(i.outOfStock) oos++; }));
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('oosCount').textContent   = oos;
+}
 
-    style.textContent = `
-      body {
-        background: ${bg};
-        background-blend-mode: normal;
-        color: ${t.textColor};
-        font-family: ${t.fontFamily};
-      }
-      h1 {
-        font-family: ${t.h1Font};
-        color: ${t.accentColor};
-        text-shadow: ${t.h1Shadow};
-      }
-      @keyframes glow {
-        0%, 100% { text-shadow: ${t.h1Shadow}; }
-        50%       { text-shadow: ${t.h1ShadowGlow}; }
-      }
-      h2 { color: ${t.h2Color}; }
-
-      .nav-btn {
-        background: ${t.navBtnBackground};
-        color: ${t.navBtnColor};
-        border: ${t.navBtnBorder};
-      }
-      .back-btn {
-        background: ${t.backBtnBackground} !important;
-        color: ${t.backBtnColor} !important;
-        border: ${t.backBtnBorder} !important;
-      }
-
-      #addItemForm {
-        background: ${t.formBackground};
-        border: ${t.formBorder};
-      }
-      #addItemForm h3 { color: ${t.formHeaderColor}; }
-      #addItemForm label { color: ${t.textColor}; }
-      #addItemForm select,
-      #addItemForm input {
-        background: ${t.inputBackground};
-        border: ${t.inputBorder};
-        color: ${t.textColor};
-      }
-      #saveNewItem { background: ${t.saveButtonBackground}; }
-
-      .menu-header {
-        font-family: ${t.menuHeaderFont};
-        color: ${t.menuHeaderColor};
-        text-shadow: ${t.menuHeaderShadow};
-      }
-      .item {
-        background: ${t.itemBackground};
-        border: ${t.itemBorder};
-        box-shadow: ${t.itemShadow};
-      }
-      .item:hover { box-shadow: ${t.itemShadowHover}; }
-      .item img { border: 2px solid ${t.accentColor}; }
-      .item-price { color: ${t.priceColor}; }
-      .remove-btn { background: ${t.accentColorDark}; }
-      .remove-btn:hover { background: ${t.accentColor}; }
-      .out-of-stock::after {
-        content: '${t.outOfStockEmoji} OUT OF STOCK';
-        background: ${t.outOfStockBackground};
-        color: ${t.outOfStockColor};
-      }
-      .particle {
-        color: ${t.floatingEmojiColor};
-        opacity: ${t.floatingEmojiOpacity};
-        animation-name: ${t.floatingAnimation};
-      }
-    `;
-    document.head.appendChild(style);
-
-    // Assign random emojis to particles
-    const emojis = t.floatingEmojis;
-    document.querySelectorAll('.particle').forEach(el => {
-      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    });
-  }
-
-  // ============================================================
-  // BUILD PAGE — renders columns and items from menu.json
-  // ============================================================
-  function buildPage(menu, theme) {
-    document.getElementById('pageTitle').textContent = menu.title || 'Menu';
-    document.getElementById('pageSubtitle').textContent = menu.subtitle || '';
-    document.getElementById('loadingMsg').style.display = 'none';
-
-    const container = document.getElementById('menuContainer');
-    container.style.display = 'grid';
-
-    // Populate category dropdown in the add-item form
-    const catSelect = document.getElementById('newCategory');
-    catSelect.innerHTML = '';
-    menu.categories.forEach(cat => {
-      const opt = document.createElement('option');
-      opt.value = cat.id;
-      opt.textContent = cat.label;
-      catSelect.appendChild(opt);
-    });
-
-    // Build each column
-    menu.categories.forEach(cat => {
-      const col = document.createElement('div');
-      col.className = 'menu-column';
-      col.id = cat.id;
-
-      const header = document.createElement('div');
-      header.className = 'menu-header';
-      header.textContent = cat.label;
-      col.appendChild(header);
-
-      cat.items.forEach(itemData => {
-        const el = buildItemElement(itemData);
-        attachToggle(el, col);
-        attachRemoveButton(el);
-        col.appendChild(el);
-      });
-
-      container.appendChild(col);
-    });
-  }
-
-  // ============================================================
-  // BUILD A SINGLE ITEM ELEMENT
-  // ============================================================
-  function buildItemElement(data) {
-    const el = document.createElement('div');
-    el.className = 'item';
-    el.setAttribute('tabindex', '0');
-    if (data.outOfStock) el.classList.add('out-of-stock');
-    el.innerHTML = `
-      <img src="${data.image}" alt="${data.name}" onerror="this.style.background='#eee';this.removeAttribute('src')">
-      <div class="item-text">
-        <p class="item-name">${data.name}</p>
-        <p class="item-price">$${parseFloat(data.price).toFixed(2)}</p>
+// ── Render item list ─────────────────────────────────────────────────────────
+function renderList(col) {
+  const el = document.getElementById('list-'+col);
+  el.innerHTML = '';
+  (menuData[col]||[]).forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'admin-item-row';
+    row.innerHTML = `
+      <img src="${item.img}" alt="${item.name}"
+        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect width=%2248%22 height=%2248%22 fill=%22%23333%22/><text x=%2224%22 y=%2230%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2218%22>?</text></svg>'">
+      <div class="admin-item-info">
+        <div class="iname">${item.name}</div>
+        <div class="iprice">${item.price}</div>
+      </div>
+      <div class="admin-item-actions">
+        <button class="oos-toggle ${item.outOfStock?'out-stock':'in-stock'}" onclick="toggleOOS('${col}',${idx})">
+          ${item.outOfStock ? '❌ Out' : '✅ In Stock'}
+        </button>
+        <button class="edit-btn-a" onclick="openEdit('${col}',${idx})">✏️</button>
+        <button class="del-btn-a"  onclick="deleteItem('${col}',${idx})">🗑</button>
       </div>`;
-    return el;
-  }
-
-  // ============================================================
-  // TOGGLE OUT-OF-STOCK
-  // ============================================================
-  function attachToggle(item, column) {
-    const handler = () => {
-      item.classList.toggle('out-of-stock');
-      column.removeChild(item);
-      if (item.classList.contains('out-of-stock')) {
-        column.appendChild(item);
-      } else {
-        const firstOut = column.querySelector('.out-of-stock');
-        if (firstOut) column.insertBefore(item, firstOut);
-        else column.appendChild(item);
-      }
-      saveStatus();
-    };
-    item.addEventListener('click', handler);
-    item.addEventListener('keypress', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
-    });
-  }
-
-  // ============================================================
-  // REMOVE BUTTON
-  // ============================================================
-  function attachRemoveButton(item) {
-    const btn = document.createElement('button');
-    btn.className = 'remove-btn';
-    btn.textContent = '✕';
-    btn.setAttribute('aria-label', 'Remove item');
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      if (confirm('Remove this item?')) { item.remove(); saveStatus(); }
-    });
-    item.appendChild(btn);
-  }
-
-  // ============================================================
-  // SAVE / LOAD OUT-OF-STOCK STATUS TO LOCALSTORAGE
-  // ============================================================
-  function saveStatus() {
-    const state = {};
-    document.querySelectorAll('.menu-column').forEach(col => {
-      col.querySelectorAll('.item').forEach(item => {
-        const name = item.querySelector('.item-name').textContent.trim();
-        state[name] = item.classList.contains('out-of-stock');
-      });
-    });
-    localStorage.setItem('menuStatus', JSON.stringify(state));
-  }
-
-  function loadStatus(menu) {
-    const state = JSON.parse(localStorage.getItem('menuStatus') || '{}');
-    if (Object.keys(state).length === 0) return;
-    document.querySelectorAll('.item').forEach(item => {
-      const name = item.querySelector('.item-name').textContent.trim();
-      if (state[name] === true) {
-        item.classList.add('out-of-stock');
-        item.closest('.menu-column').appendChild(item);
-      }
-    });
-  }
-
-  // ============================================================
-  // ADD ITEM FORM
-  // ============================================================
-  document.getElementById('addItemBtn').addEventListener('click', () => {
-    const form = document.getElementById('addItemForm');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    el.appendChild(row);
   });
+  updateStatus();
+}
 
-  document.getElementById('saveNewItem').addEventListener('click', () => {
-    const catId  = document.getElementById('newCategory').value;
-    const name   = document.getElementById('newName').value.trim();
-    const price  = document.getElementById('newPrice').value.trim();
-    const image  = document.getElementById('newImage').value.trim();
+function renderAll() {
+  ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(renderList);
+}
 
-    if (!name || !price || !image) { alert('Please fill in all fields!'); return; }
+// ── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
 
-    const column = document.getElementById(catId);
-    const el = buildItemElement({ name, price: parseFloat(price), image, outOfStock: false });
-    attachToggle(el, column);
-    attachRemoveButton(el);
-    column.appendChild(el);
-    saveStatus();
+// ── CRUD ─────────────────────────────────────────────────────────────────────
+function toggleOOS(col, idx) {
+  menuData[col][idx].outOfStock = !menuData[col][idx].outOfStock;
+  saveData(); renderList(col);
+}
 
-    document.getElementById('newName').value  = '';
-    document.getElementById('newPrice').value = '';
-    document.getElementById('newImage').value = '';
-    document.getElementById('addItemForm').style.display = 'none';
-    alert('Item added!');
-  });
-  </script>
+function deleteItem(col, idx) {
+  if (!confirm(`Remove "${menuData[col][idx].name}"?`)) return;
+  menuData[col].splice(idx, 1);
+  saveData(); renderList(col);
+}
+
+function addItem(col) {
+  const name  = document.getElementById('add-name-'+col).value.trim();
+  const price = document.getElementById('add-price-'+col).value.trim();
+  const img   = document.getElementById('add-img-'+col).value.trim();
+  if (!name||!price||!img) { alert('Please fill in all fields.'); return; }
+  menuData[col].push({ name, price: price.startsWith('$')?price:'$'+price, img, outOfStock:false });
+  saveData(); renderList(col);
+  ['name','price','img'].forEach(f => document.getElementById('add-'+f+'-'+col).value='');
+}
+
+// ── Edit modal ───────────────────────────────────────────────────────────────
+function openEdit(col, idx) {
+  editTarget = {col, idx};
+  const item = menuData[col][idx];
+  document.getElementById('edit-name').value  = item.name;
+  document.getElementById('edit-price').value = item.price;
+  document.getElementById('edit-img').value   = item.img;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveEdit() {
+  if (!editTarget) return;
+  const {col, idx} = editTarget;
+  const price = document.getElementById('edit-price').value.trim();
+  menuData[col][idx] = {
+    ...menuData[col][idx],
+    name:  document.getElementById('edit-name').value.trim(),
+    price: price.startsWith('$') ? price : '$'+price,
+    img:   document.getElementById('edit-img').value.trim()
+  };
+  saveData(); renderList(col); closeEdit();
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('open');
+  editTarget = null;
+}
+
+// ── Admin open/close ─────────────────────────────────────────────────────────
+function openAdmin()  { document.getElementById('adminOverlay').classList.add('open'); renderAll(); }
+function closeAdmin() { document.getElementById('adminOverlay').classList.remove('open'); }
+
+// ── Export ───────────────────────────────────────────────────────────────────
+function generateExport() {
+  document.getElementById('exportArea').value = JSON.stringify(menuData, null, 2);
+}
+function copyExport() {
+  const area = document.getElementById('exportArea');
+  if (!area.value) generateExport();
+  navigator.clipboard.writeText(area.value)
+    .then(() => alert('✅ Copied! Now paste into your items.json file and save it.'))
+    .catch(() => { area.select(); document.execCommand('copy'); alert('✅ Copied!'); });
+}
+
+// Init
+updateStatus();
+</script>
 </body>
 </html>
