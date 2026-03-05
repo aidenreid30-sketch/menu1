@@ -117,7 +117,7 @@
 </div>
 
 <p id="loadingMsg">Loading menu...</p>
-<p id="errorMsg">⚠️ Could not load items. Make sure <b>items.json</b> is in the same folder as this page (main/items.json).</p>
+<p id="errorMsg">⚠️ Could not load items. Make sure <b>items.json</b> is in the root project folder.</p>
 
 <div class="menu-container" id="menuContainer" style="display:none">
   <div class="menu-column" id="foodColumn">  <div class="menu-header">FOOD</div></div>
@@ -180,7 +180,7 @@ async function loadMenu() {
     // Try local items.json first, fall back to admin localStorage data
     let data;
     try {
-      const res = await fetch('items.json');
+      const res = await fetch('../items.json');
       if (!res.ok) throw new Error('fetch failed');
       data = await res.json();
     } catch {

@@ -237,7 +237,6 @@ h1 {
 
   <div class="launcher">
     <a href="main/index.html"               class="button main"        aria-label="Main menu">🏠 Main Menu</a>
-    <a href="Christmas theme/index.html"    class="button christmas"   aria-label="Christmas menu">🎄 Christmas Menu</a>
     <a href="Thanksgiving theme/index.html" class="button thanksgiving" aria-label="Thanksgiving menu">🦃 Thanksgiving Menu</a>
     <a href="Baseball theme/index.html"     class="button baseball"    aria-label="Baseball day menu">⚾ Baseball Day</a>
   </div>
@@ -335,9 +334,8 @@ h1 {
     <!-- Export -->
     <div class="admin-section" id="tab-export">
       <p style="color:#888;margin-bottom:14px;line-height:1.6;">
-        Click <b style="color:#ffd700">Generate JSON</b> below, then copy the output and save it as
-        <code style="background:#111;padding:2px 6px;border-radius:4px;color:#7fff7f">items.json</code>
-        in your project root. All menu pages load from this file.
+        Changes you make here are <b style="color:#ffd700">live immediately</b> — all menu pages load from the same data.<br>
+        Use the export below to save a backup or update <code style="background:#111;padding:2px 6px;border-radius:4px;color:#7fff7f">items.json</code> on disk so changes survive a browser reset.
       </p>
       <div class="export-row">
         <button class="exp-btn green" onclick="generateExport()">🔄 Generate JSON</button>
@@ -372,40 +370,44 @@ h1 {
 </div>
 
 <script>
-// ── Default data (used if no localStorage entry exists) ──────────────────────
-const DEFAULT_ITEMS = {
-  foodColumn: [
-    {name:"Walking Taco",   price:"$5.00", img:"../images/walking-tacos.jpg",  outOfStock:false},
-    {name:"Nachos",         price:"$3.00", img:"../images/nachos.jpg",          outOfStock:false},
-    {name:"Pretzel w/ Cheese",price:"$4.00",img:"../images/Pretzel-Cheese.jpg",outOfStock:false},
-    {name:"Hot Dog",        price:"$3.00", img:"../images/hotdog.jpg",          outOfStock:false}
-  ],
-  drinkColumn: [
-    {name:"Soda",           price:"$3.00", img:"../images/soda.webp",           outOfStock:false},
-    {name:"Water",          price:"$3.00", img:"../images/water.jpg",           outOfStock:false},
-    {name:"Sweet Tea",      price:"$3.00", img:"../images/sweet-tea.jpg",       outOfStock:false},
-    {name:"Coffee",         price:"$1.00", img:"../images/coffee.jpg",          outOfStock:false},
-    {name:"Hot Chocolate",  price:"$1.00", img:"../images/Hot-Chocolate.jpg",   outOfStock:false},
-    {name:"Powerade",       price:"$3.00", img:"../images/Powerade.jpg",        outOfStock:false}
-  ],
-  snackColumn: [
-    {name:"Airheads",       price:"$0.25", img:"../images/Airheads.jpg",        outOfStock:false},
-    {name:"Candy",          price:"$2.00", img:"../images/Candy.jpg",           outOfStock:false},
-    {name:"Cotton Candy",   price:"$2.00", img:"../images/Cotton-Candy.jpg",    outOfStock:false},
-    {name:"Gum",            price:"$1.00", img:"../images/gum.jpg",             outOfStock:false},
-    {name:"Seeds",          price:"$1.00", img:"../images/Seeds.jpg",           outOfStock:false},
-    {name:"Cookies",        price:"$1.00", img:"../images/Cookies.jpg",         outOfStock:false}
-  ],
-  snackColumn2: [
-    {name:"Chips",          price:"$1.00", img:"../images/Chips.webp",          outOfStock:false},
-    {name:"Popcorn",        price:"$1.00", img:"../images/Popcorn.jpg",         outOfStock:false},
-    {name:"Jerky",          price:"$2.50", img:"../images/Jerky.jpg",           outOfStock:false},
-    {name:"Pickle",         price:"$1.00", img:"../images/Pickle.jpg",          outOfStock:false}
-  ]
-};
-
-let menuData   = JSON.parse(localStorage.getItem('adminMenuData')) || JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+// ── Data: loaded from items.json, kept in sync via localStorage ───────────────
+let menuData   = null;
 let editTarget = null;
+
+// Load items.json first, then overlay any adminMenuData changes on top
+async function initAdminData() {
+  let fromFile = null;
+  try {
+    const res = await fetch('items.json');
+    if (res.ok) fromFile = await res.json();
+  } catch(e) {}
+
+  const fromStorage = localStorage.getItem('adminMenuData');
+
+  if (fromStorage) {
+    // localStorage wins — it has the latest admin edits
+    menuData = JSON.parse(fromStorage);
+  } else if (fromFile) {
+    // First time opening admin — seed from items.json
+    menuData = fromFile;
+    // Normalize: items.json uses numeric prices, admin panel uses "$X.XX" strings
+    ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(col => {
+      (menuData[col]||[]).forEach(item => {
+        if (typeof item.price === 'number') item.price = '$' + item.price.toFixed(2);
+        // items.json uses "img" key; ensure compatibility
+        if (!item.img && item.image) item.img = item.image;
+        if (item.outOfStock === undefined) item.outOfStock = false;
+      });
+    });
+    saveData(); // persist to localStorage so future opens use this
+  } else {
+    // No items.json and no localStorage — show empty state
+    menuData = { foodColumn:[], drinkColumn:[], snackColumn:[], snackColumn2:[] };
+  }
+
+  renderAll();
+  updateStatus();
+}
 
 // ── Persist & status ─────────────────────────────────────────────────────────
 function saveData() {
@@ -449,6 +451,7 @@ function renderList(col) {
 }
 
 function renderAll() {
+  if (!menuData) return;
   ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(renderList);
 }
 
@@ -511,7 +514,16 @@ function closeEdit() {
 }
 
 // ── Admin open/close ─────────────────────────────────────────────────────────
-function openAdmin()  { document.getElementById('adminOverlay').classList.add('open'); renderAll(); }
+let adminInitialized = false;
+function openAdmin() {
+  document.getElementById('adminOverlay').classList.add('open');
+  if (!adminInitialized) {
+    adminInitialized = true;
+    initAdminData();
+  } else {
+    renderAll();
+  }
+}
 function closeAdmin() { document.getElementById('adminOverlay').classList.remove('open'); }
 
 // ── Export ───────────────────────────────────────────────────────────────────
@@ -522,12 +534,9 @@ function copyExport() {
   const area = document.getElementById('exportArea');
   if (!area.value) generateExport();
   navigator.clipboard.writeText(area.value)
-    .then(() => alert('✅ Copied! Now paste into your items.json file and save it.'))
+    .then(() => alert('✅ Copied! Paste this into items.json to save permanently.'))
     .catch(() => { area.select(); document.execCommand('copy'); alert('✅ Copied!'); });
 }
-
-// Init
-updateStatus();
 </script>
 </body>
 </html>
