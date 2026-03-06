@@ -3,213 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Main Menu</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background-color: #d1001f;
-      color: #eaeae5;
-      font-family: 'Arial Black', sans-serif;
-      text-align: center;
-      min-height: 100vh;
-      padding: 20px;
-      padding-bottom: 100px;
-    }
-
-    .header { margin-bottom: 30px; animation: slideDown 0.6s ease-out; }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    h1 { font-size: clamp(40px,8vw,60px); margin: 20px 0 10px; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); }
-    h2 { font-size: clamp(20px,4vw,30px); margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-
-    /* Nav buttons */
-    .nav-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
-    .nav-btn {
-      padding: 12px 24px;
-      background: linear-gradient(145deg,#f0eeea,#e7e5e0);
-      color: #3e0b0b; font-size: 18px; font-weight: bold;
-      border: none; border-radius: 12px; cursor: pointer;
-      transition: all 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      text-decoration: none; display: inline-block;
-    }
-    .nav-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.4); background: linear-gradient(145deg,#ffd700,#ffed4e); }
-    .nav-btn:focus { outline: 3px solid #fff; outline-offset: 2px; }
-    .back-btn { background: linear-gradient(145deg,#666,#888); color: white; }
-    .back-btn:hover { background: linear-gradient(145deg,#888,#aaa); }
-
-    /* Menu grid */
-    .menu-container {
-      width: 100%; max-width: 1400px; margin: 0 auto;
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
-      gap: 25px; animation: fadeIn 0.8s ease-out 0.2s backwards;
-    }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-
-    .menu-header { font-size: clamp(28px,5vw,36px); text-decoration: underline; text-underline-offset: 8px; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-    .menu-column { display: flex; flex-direction: column; gap: 15px; align-items: center; }
-
-    /* Items */
-    .item {
-      background: linear-gradient(145deg,#990F02,#7a0c02);
-      border: 3px solid #eeeeee; border-radius: 20px;
-      width: 100%; max-width: 400px; padding: 16px 20px;
-      display: flex; align-items: center; gap: 12px;
-      cursor: pointer; transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
-      position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .item:hover { transform: translateY(-5px) scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-color: #ffd700; }
-    .item:focus  { outline: 3px solid #fbfaf6; outline-offset: 3px; }
-    .item img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; border: 2px solid #ffb300; flex-shrink: 0; transition: transform 0.3s; }
-    .item:hover img { transform: rotate(5deg) scale(1.1); }
-    .item-text { text-align: left; flex: 1; min-width: 0; }
-    .item-name  { font-size: clamp(22px,4vw,30px); margin: 0 0 5px; word-wrap: break-word; }
-    .item-price { font-size: clamp(18px,3vw,24px); color: #fff; margin: 0; }
-
-    .out-of-stock { opacity: 0.5; text-decoration: line-through; }
-    .out-of-stock img { filter: grayscale(100%); }
-    .out-of-stock::after {
-      content: '❌ OUT OF STOCK'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-      background: rgba(0,0,0,0.8); color: #ff4444; padding: 8px 16px; border-radius: 8px;
-      font-size: 14px; font-weight: bold; pointer-events: none; white-space: nowrap;
-    }
-
-    .remove-btn {
-      background: #ff4444; color: white; border: none; padding: 8px 14px;
-      font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer;
-      margin-left: auto; opacity: 0; pointer-events: none; transition: all 0.3s ease; flex-shrink: 0;
-    }
-    .item:hover .remove-btn { opacity: 1; pointer-events: auto; }
-    .remove-btn:hover { background: #cc0000; transform: scale(1.1); }
-
-    /* Logo */
-    .bottom-right-image { position: fixed; bottom: 20px; right: 20px; width: 140px; height: auto; z-index: 9999; transition: transform 0.3s; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
-    .bottom-right-image:hover { transform: scale(1.1) rotate(5deg); }
-
-    /* Loading / error */
-    #loadingMsg { font-size: 28px; color: #ffee00; margin: 60px auto; }
-    #errorMsg   { font-size: 16px; color: #ffee00; background: rgba(0,0,0,0.3); padding: 16px 24px; border-radius: 10px; margin: 20px auto; max-width: 600px; display: none; }
-
-    @media(max-width:1024px){ .menu-container{grid-template-columns:repeat(2,1fr);gap:20px} }
-    @media(max-width:768px){
-      body{padding:15px;padding-bottom:120px}
-      .menu-container{grid-template-columns:1fr;gap:15px}
-      .item img{width:60px;height:60px}
-      .bottom-right-image{width:100px}
-    }
-    @media(max-width:480px){ .item img{width:50px;height:50px} .bottom-right-image{width:80px} }
-    @media(hover:none){ .remove-btn{opacity:1;pointer-events:auto} .item{min-height:90px} }
-  </style>
+  <title>Concession Stand Menu - Farmington, AR</title>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
 
-<div class="header">
-  <h1>🍿 Concession Stand Menu</h1>
-  <h2>Fresh &amp; Delicious!</h2>
+<div class="refresh-indicator">
+  <div class="refresh-dot"></div>
+  <span>Auto-updating</span>
 </div>
 
-<div class="nav-buttons">
-  <a href="../index.html" class="nav-btn back-btn">⬅️ Back to Launcher</a>
+<div class="header">
+  <h1>🍿 Concession Stand Menu</h1>
+  <h2>Fresh & Delicious!</h2>
 </div>
 
 <p id="loadingMsg">Loading menu...</p>
-<p id="errorMsg">⚠️ Could not load items. Make sure <b>items.json</b> is in the root project folder.</p>
+<p id="errorMsg">⚠️ Menu temporarily unavailable. Please check back shortly.</p>
 
 <div class="menu-container" id="menuContainer" style="display:none">
-  <div class="menu-column" id="foodColumn">  <div class="menu-header">FOOD</div></div>
-  <div class="menu-column" id="drinkColumn"> <div class="menu-header">DRINKS</div></div>
-  <div class="menu-column" id="snackColumn"> <div class="menu-header">SNACKS</div></div>
+  <div class="menu-column" id="foodColumn"><div class="menu-header">FOOD</div></div>
+  <div class="menu-column" id="drinkColumn"><div class="menu-header">DRINKS</div></div>
+  <div class="menu-column" id="snackColumn"><div class="menu-header">SNACKS</div></div>
   <div class="menu-column" id="snackColumn2"><div class="menu-header">MORE SNACKS</div></div>
 </div>
 
 <img src="../images/logo.png" class="bottom-right-image" alt="Logo">
 
 <script>
-// ── Out-of-stock toggle (click) ───────────────────────────────────────────────
-function attachToggle(item, column) {
-  const handler = () => {
-    item.classList.toggle('out-of-stock');
-    column.removeChild(item);
-    const firstOut = column.querySelector('.out-of-stock:not(.menu-header)');
-    if (item.classList.contains('out-of-stock')) {
-      column.appendChild(item);
-    } else {
-      firstOut ? column.insertBefore(item, firstOut) : column.appendChild(item);
-    }
-  };
-  item.addEventListener('click', handler);
-  item.addEventListener('keypress', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();handler();} });
-}
+const AUTO_REFRESH_INTERVAL = 30000;
+let refreshTimer = null;
 
-// ── Remove button ─────────────────────────────────────────────────────────────
-function attachRemoveBtn(item) {
-  const btn = document.createElement('button');
-  btn.className = 'remove-btn';
-  btn.textContent = '✕';
-  btn.setAttribute('aria-label', 'Remove item');
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    if (confirm('Remove this item?')) item.remove();
-  });
-  item.appendChild(btn);
-}
-
-// ── Build an item element ─────────────────────────────────────────────────────
-function buildItem(data, column) {
+function buildItem(data) {
   const div = document.createElement('div');
   div.className = 'item' + (data.outOfStock ? ' out-of-stock' : '');
-  div.setAttribute('tabindex', '0');
   div.innerHTML = `
-    <img src="${data.img}" alt="${data.name}" onerror="this.style.display='none'">
+    <img src="${data.img}" alt="${escapeHtml(data.name)}" onerror="this.style.display='none'">
     <div class="item-text">
-      <p class="item-name">${data.name}</p>
-      <p class="item-price">${data.price}</p>
-    </div>`;
-  attachToggle(div, column);
-  attachRemoveBtn(div);
+      <p class="item-name">${escapeHtml(data.name)}</p>
+      <p class="item-price">${escapeHtml(data.price)}</p>
+    </div>
+    ${data.outOfStock ? '<div class="out-of-stock-badge">OUT OF STOCK</div>' : ''}
+  `;
   return div;
 }
 
-// ── Load items.json ───────────────────────────────────────────────────────────
 async function loadMenu() {
   try {
-    // Try local items.json first, fall back to admin localStorage data
-    let data;
-    try {
+    let data = null;
+    const savedData = localStorage.getItem('adminMenuData');
+    if (savedData) {
+      try { data = JSON.parse(savedData); } catch (e) {}
+    }
+    
+    if (!data) {
       const res = await fetch('../items.json');
-      if (!res.ok) throw new Error('fetch failed');
+      if (!res.ok) throw new Error('Fetch failed');
       data = await res.json();
-    } catch {
-      // Fallback: use data saved by admin panel
-      const saved = localStorage.getItem('adminMenuData');
-      if (saved) {
-        data = JSON.parse(saved);
-      } else {
-        throw new Error('no data');
-      }
     }
 
     document.getElementById('loadingMsg').style.display = 'none';
     document.getElementById('menuContainer').style.display = 'grid';
 
-    ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(col => {
-      const column = document.getElementById(col);
-      (data[col] || []).forEach(itemData => {
-        column.appendChild(buildItem(itemData, column));
+    ['foodColumn', 'drinkColumn', 'snackColumn', 'snackColumn2'].forEach(colName => {
+      const column = document.getElementById(colName);
+      const items = Array.from(column.children);
+      items.forEach(item => {
+        if (!item.classList.contains('menu-header')) item.remove();
+      });
+      (data[colName] || []).forEach(itemData => {
+        column.appendChild(buildItem(itemData));
       });
     });
-
-  } catch(err) {
+  } catch (err) {
     document.getElementById('loadingMsg').style.display = 'none';
-    document.getElementById('errorMsg').style.display   = 'block';
+    document.getElementById('errorMsg').style.display = 'block';
   }
 }
 
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(loadMenu, AUTO_REFRESH_INTERVAL);
+}
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'adminMenuData') loadMenu();
+});
+
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return String(unsafe).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (refreshTimer) clearInterval(refreshTimer);
+  } else {
+    loadMenu();
+    startAutoRefresh();
+  }
+});
+
 loadMenu();
+startAutoRefresh();
+window.addEventListener('online', loadMenu);
 </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Menu Launcher</title>
+<title>Menu Launcher - Farmington Concession Stand</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -84,8 +84,6 @@ h1 {
 
 .main        { background: linear-gradient(145deg,#2196f3,#1565c0); }
 .main:hover  { background: linear-gradient(145deg,#42a5f5,#1976d2); }
-.christmas   { background: linear-gradient(145deg,#c62828,#2e7d32); }
-.christmas:hover { background: linear-gradient(145deg,#e53935,#43a047); }
 .thanksgiving{ background: linear-gradient(145deg,#ff9800,#6d4c41); }
 .thanksgiving:hover { background: linear-gradient(145deg,#ffa726,#795548); }
 .baseball    { background: linear-gradient(145deg,#cc0000,#990000); }
@@ -95,6 +93,8 @@ h1 {
 .button:nth-child(2){animation:fadeIn .6s ease-out .4s backwards}
 .button:nth-child(3){animation:fadeIn .6s ease-out .6s backwards}
 .button:nth-child(4){animation:fadeIn .6s ease-out .8s backwards}
+
+@keyframes fadeIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
 
 /* ── Admin tab bar ── */
 .admin-tab-bar {
@@ -115,7 +115,7 @@ h1 {
 /* ── Admin overlay ── */
 #adminOverlay {
   display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.88); z-index: 200;
+  background: rgba(0,0,0,0.95); z-index: 200;
   overflow-y: auto; padding: 30px 20px 80px;
 }
 #adminOverlay.open { display: block; }
@@ -136,6 +136,14 @@ h1 {
 }
 .close-admin-btn:hover { background: #444; }
 
+/* Sync status */
+.sync-status {
+  display: inline-block; padding: 6px 12px; border-radius: 6px;
+  font-size: 12px; font-weight: bold; margin-left: 12px;
+}
+.sync-status.synced { background: #2e7d32; color: white; }
+.sync-status.modified { background: #ff9800; color: white; }
+
 /* Category tabs */
 .admin-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 2px solid #2a2a2a; padding-bottom: 10px; }
 .admin-tab {
@@ -148,14 +156,24 @@ h1 {
 .admin-section { display: none; }
 .admin-section.active { display: block; }
 
+/* Stats bar */
+.stats-bar {
+  display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+  background: #252525; border-radius: 10px; padding: 12px 20px;
+  margin-bottom: 20px; border: 1px solid #383838;
+}
+.stat-item { text-align: center; }
+.stat-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 20px; font-weight: bold; color: #ffd700; margin-top: 2px; }
+
 /* Item rows */
 .admin-item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
 .admin-item-row {
   display: flex; align-items: center; gap: 10px;
   background: #252525; border: 1px solid #383838; border-radius: 10px; padding: 10px 14px;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
-.admin-item-row:hover { border-color: #ffd700; }
+.admin-item-row:hover { border-color: #ffd700; background: #2a2a2a; }
 .admin-item-row img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 2px solid #444; flex-shrink: 0; }
 .admin-item-info { flex: 1; text-align: left; min-width: 0; }
 .admin-item-info .iname { font-size: 15px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -185,170 +203,251 @@ h1 {
 .form-group input:focus, .form-group select:focus { outline: none; border-color: #ffd700; }
 .add-btn-a {
   width: 100%; padding: 11px; background: linear-gradient(145deg,#ffd700,#ffb300);
-  color: #1a1a1a; border: none; border-radius: 10px; font-size: 16px; font-weight: bold;
-  cursor: pointer; margin-top: 4px; transition: all 0.3s;
+  color: #1a1a1a; font-size: 14px; font-weight: bold; border: none;
+  border-radius: 8px; cursor: pointer; transition: all 0.2s; margin-top: 6px;
 }
-.add-btn-a:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); transform: translateY(-2px); }
+.add-btn-a:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); transform: translateY(-1px); }
 
-/* Status bar */
-.status-bar { text-align: center; font-size: 13px; color: #777; margin-top: 18px; padding: 8px 12px; background: #141414; border-radius: 8px; border: 1px solid #2a2a2a; }
-.status-bar b { color: #ffd700; }
-
-/* Export */
-.export-area { width: 100%; height: 220px; background: #111; color: #7fff7f; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px; font-size: 12px; font-family: monospace; resize: vertical; margin-top: 10px; }
-.export-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-.exp-btn { padding: 10px 20px; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-.exp-btn.green { background: #2e7d32; }
-.exp-btn.green:hover { background: #43a047; }
-.exp-btn.blue  { background: #1565c0; }
-.exp-btn.blue:hover  { background: #1e88e5; }
+/* Export section */
+.export-section { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 18px; margin-top: 20px; }
+.export-section h3 { color: #ffd700; margin-bottom: 12px; font-size: 16px; }
+.export-section p { color: #aaa; font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
+.export-area { width: 100%; height: 160px; background: #1a1a1a; color: #fff; border: 2px solid #383838; border-radius: 8px; padding: 12px; font-family: 'Courier New', monospace; font-size: 12px; resize: vertical; margin-bottom: 10px; }
+.export-area:focus { outline: none; border-color: #ffd700; }
+.export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.export-btn {
+  padding: 9px 18px; border-radius: 8px; border: none; font-size: 14px;
+  font-weight: bold; cursor: pointer; transition: all 0.2s;
+}
+.export-btn.primary { background: linear-gradient(145deg,#ffd700,#ffb300); color: #1a1a1a; }
+.export-btn.primary:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); }
+.export-btn.secondary { background: #2a2a2a; color: #fff; border: 1px solid #444; }
+.export-btn.secondary:hover { background: #383838; }
+.export-btn.danger { background: #c62828; color: #fff; }
+.export-btn.danger:hover { background: #b71c1c; }
 
 /* Edit modal */
-#editModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; align-items: center; justify-content: center; }
+#editModal {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+  z-index: 300; align-items: center; justify-content: center; padding: 20px;
+}
 #editModal.open { display: flex; }
-.edit-box { background: #1e1e1e; border: 2px solid #ffd700; border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; animation: fadeIn 0.2s ease-out; }
-.edit-box h3 { color: #ffd700; margin-bottom: 16px; font-size: 20px; }
-.edit-field { width: 100%; padding: 9px 12px; border-radius: 8px; border: 2px solid #383838; background: #1a1a1a; color: #fff; font-size: 14px; margin-bottom: 12px; display: block; }
+.edit-box {
+  background: #1e1e1e; border: 2px solid #ffd700; border-radius: 16px;
+  padding: 28px; width: 100%; max-width: 480px;
+  animation: fadeIn 0.3s ease-out;
+}
+.edit-box h3 { color: #ffd700; margin-bottom: 20px; font-size: 22px; }
+.edit-field {
+  width: 100%; padding: 10px 14px; margin-bottom: 14px;
+  background: #1a1a1a; color: #fff; border: 2px solid #383838;
+  border-radius: 8px; font-size: 14px; transition: border-color 0.2s;
+}
 .edit-field:focus { outline: none; border-color: #ffd700; }
-.edit-actions { display: flex; gap: 10px; margin-top: 6px; }
-.save-edit { flex:1; padding:10px; background:linear-gradient(145deg,#ffd700,#ffb300); color:#1a1a1a; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; }
-.cancel-edit { padding:10px 18px; background:#2a2a2a; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; }
+.edit-actions { display: flex; gap: 10px; margin-top: 20px; }
+.save-edit, .cancel-edit {
+  flex: 1; padding: 11px; border-radius: 8px; border: none;
+  font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+}
+.save-edit { background: linear-gradient(145deg,#ffd700,#ffb300); color: #1a1a1a; }
+.save-edit:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); }
+.cancel-edit { background: #2a2a2a; color: #fff; }
+.cancel-edit:hover { background: #444; }
 
-@keyframes fadeIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-
-@media(max-width:768px){
-  .launcher{gap:20px;padding:10px}
-  .button{width:100%;max-width:350px;height:150px;font-size:22px}
-  .form-row{grid-template-columns:1fr}
-  .admin-item-actions{flex-wrap:wrap}
+@media(max-width:768px) {
+  .form-row { grid-template-columns: 1fr; }
+  .stats-bar { gap: 12px; }
 }
 </style>
 </head>
 <body>
 
 <div class="background-decoration">
-  <div class="particle"></div><div class="particle"></div><div class="particle"></div>
-  <div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
 </div>
 
 <div class="content-wrapper">
-  <h1>🍽️ Menu Launcher</h1>
-  <p class="subtitle">Select a theme to view the menu</p>
+  <h1>🍿 Concession Menu</h1>
+  <p class="subtitle">Farmington, Arkansas</p>
 
   <div class="launcher">
-    <a href="main/index.html"               class="button main"        aria-label="Main menu">🏠 Main Menu</a>
-    <a href="Thanksgiving theme/index.html" class="button thanksgiving" aria-label="Thanksgiving menu">🦃 Thanksgiving Menu</a>
-    <a href="Baseball theme/index.html"     class="button baseball"    aria-label="Baseball day menu">⚾ Baseball Day</a>
+    <a href="main/index.html" class="button main">📺 Main Display</a>
+    <a href="Thanksgiving theme/index.html" class="button thanksgiving">🦃 Thanksgiving</a>
+    <a href="Baseball theme/index.html" class="button baseball">⚾ Baseball Theme</a>
   </div>
 </div>
 
-<!-- ── Admin tab bar ── -->
 <div class="admin-tab-bar">
-  <span class="admin-tab-bar-label">Staff only →</span>
+  <span class="admin-tab-bar-label">Staff:</span>
   <button class="admin-open-btn" onclick="openAdmin()">⚙️ Admin Panel</button>
 </div>
 
-<!-- ── Admin Overlay ── -->
+<!-- Admin Overlay -->
 <div id="adminOverlay">
   <div class="admin-panel">
     <div class="admin-panel-header">
       <div>
-        <h2>⚙️ Admin Panel</h2>
-        <p class="admin-sub">Add, edit, remove items & toggle stock. Use <b style="color:#ffd700">Export JSON</b> tab to save your changes to <b style="color:#ffd700">items.json</b>.</p>
+        <h2>⚙️ Menu Manager</h2>
       </div>
       <button class="close-admin-btn" onclick="closeAdmin()">✕ Close</button>
     </div>
+    <p class="admin-sub">
+      Manage all menu items • Changes save automatically
+      <span class="sync-status" id="syncStatus">Loading...</span>
+    </p>
 
-    <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchTab('foodColumn',this)">🌮 Food</button>
-      <button class="admin-tab"        onclick="switchTab('drinkColumn',this)">🥤 Drinks</button>
-      <button class="admin-tab"        onclick="switchTab('snackColumn',this)">🍬 Snacks</button>
-      <button class="admin-tab"        onclick="switchTab('snackColumn2',this)">🍿 More Snacks</button>
-      <button class="admin-tab"        onclick="switchTab('export',this)">📋 Export JSON</button>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-label">Total Items</div>
+        <div class="stat-value" id="totalCount">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Out of Stock</div>
+        <div class="stat-value" id="oosCount">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Last Saved</div>
+        <div class="stat-value" id="lastSaved">--:--</div>
+      </div>
     </div>
 
-    <!-- Food -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('foodColumn',this)">🍔 Food</button>
+      <button class="admin-tab" onclick="switchTab('drinkColumn',this)">🥤 Drinks</button>
+      <button class="admin-tab" onclick="switchTab('snackColumn',this)">🍿 Snacks</button>
+      <button class="admin-tab" onclick="switchTab('snackColumn2',this)">🍪 More Snacks</button>
+      <button class="admin-tab" onclick="switchTab('export',this)">📤 Export/Backup</button>
+    </div>
+
+    <!-- Food Section -->
     <div class="admin-section active" id="tab-foodColumn">
       <div class="admin-item-list" id="list-foodColumn"></div>
       <div class="add-item-form">
-        <h3>➕ Add to Food</h3>
+        <h3>➕ Add Food Item</h3>
         <div class="form-row">
-          <div class="form-group"><label>Name</label><input type="text" id="add-name-foodColumn" placeholder="e.g., Hot Dog"></div>
-          <div class="form-group"><label>Price</label><input type="text" id="add-price-foodColumn" placeholder="e.g., 3.00"></div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="add-name-foodColumn" placeholder="e.g., Hot Dog">
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="add-price-foodColumn" placeholder="$3.00">
+          </div>
         </div>
         <div class="form-row full">
-          <div class="form-group"><label>Image Path</label><input type="text" id="add-img-foodColumn" placeholder="e.g., ../images/hotdog.jpg"></div>
+          <div class="form-group">
+            <label>Image Path</label>
+            <input type="text" id="add-img-foodColumn" placeholder="../images/hotdog.jpg">
+          </div>
         </div>
-        <button class="add-btn-a" onclick="addItem('foodColumn')">➕ Add Item</button>
+        <button class="add-btn-a" onclick="addItem('foodColumn')">Add Item</button>
       </div>
     </div>
 
-    <!-- Drinks -->
+    <!-- Drinks Section -->
     <div class="admin-section" id="tab-drinkColumn">
       <div class="admin-item-list" id="list-drinkColumn"></div>
       <div class="add-item-form">
-        <h3>➕ Add to Drinks</h3>
+        <h3>➕ Add Drink Item</h3>
         <div class="form-row">
-          <div class="form-group"><label>Name</label><input type="text" id="add-name-drinkColumn" placeholder="e.g., Lemonade"></div>
-          <div class="form-group"><label>Price</label><input type="text" id="add-price-drinkColumn" placeholder="e.g., 2.00"></div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="add-name-drinkColumn" placeholder="e.g., Soda">
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="add-price-drinkColumn" placeholder="$2.00">
+          </div>
         </div>
         <div class="form-row full">
-          <div class="form-group"><label>Image Path</label><input type="text" id="add-img-drinkColumn" placeholder="e.g., ../images/lemonade.jpg"></div>
+          <div class="form-group">
+            <label>Image Path</label>
+            <input type="text" id="add-img-drinkColumn" placeholder="../images/soda.jpg">
+          </div>
         </div>
-        <button class="add-btn-a" onclick="addItem('drinkColumn')">➕ Add Item</button>
+        <button class="add-btn-a" onclick="addItem('drinkColumn')">Add Item</button>
       </div>
     </div>
 
-    <!-- Snacks -->
+    <!-- Snacks Section -->
     <div class="admin-section" id="tab-snackColumn">
       <div class="admin-item-list" id="list-snackColumn"></div>
       <div class="add-item-form">
-        <h3>➕ Add to Snacks</h3>
+        <h3>➕ Add Snack Item</h3>
         <div class="form-row">
-          <div class="form-group"><label>Name</label><input type="text" id="add-name-snackColumn" placeholder="e.g., Fruit Snacks"></div>
-          <div class="form-group"><label>Price</label><input type="text" id="add-price-snackColumn" placeholder="e.g., 1.00"></div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="add-name-snackColumn" placeholder="e.g., Popcorn">
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="add-price-snackColumn" placeholder="$1.50">
+          </div>
         </div>
         <div class="form-row full">
-          <div class="form-group"><label>Image Path</label><input type="text" id="add-img-snackColumn" placeholder="e.g., ../images/fruitsnacks.jpg"></div>
+          <div class="form-group">
+            <label>Image Path</label>
+            <input type="text" id="add-img-snackColumn" placeholder="../images/popcorn.jpg">
+          </div>
         </div>
-        <button class="add-btn-a" onclick="addItem('snackColumn')">➕ Add Item</button>
+        <button class="add-btn-a" onclick="addItem('snackColumn')">Add Item</button>
       </div>
     </div>
 
-    <!-- More Snacks -->
+    <!-- More Snacks Section -->
     <div class="admin-section" id="tab-snackColumn2">
       <div class="admin-item-list" id="list-snackColumn2"></div>
       <div class="add-item-form">
-        <h3>➕ Add to More Snacks</h3>
+        <h3>➕ Add Snack Item</h3>
         <div class="form-row">
-          <div class="form-group"><label>Name</label><input type="text" id="add-name-snackColumn2" placeholder="e.g., Trail Mix"></div>
-          <div class="form-group"><label>Price</label><input type="text" id="add-price-snackColumn2" placeholder="e.g., 1.50"></div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="add-name-snackColumn2" placeholder="e.g., Chips">
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="add-price-snackColumn2" placeholder="$1.00">
+          </div>
         </div>
         <div class="form-row full">
-          <div class="form-group"><label>Image Path</label><input type="text" id="add-img-snackColumn2" placeholder="e.g., ../images/trailmix.jpg"></div>
+          <div class="form-group">
+            <label>Image Path</label>
+            <input type="text" id="add-img-snackColumn2" placeholder="../images/chips.jpg">
+          </div>
         </div>
-        <button class="add-btn-a" onclick="addItem('snackColumn2')">➕ Add Item</button>
+        <button class="add-btn-a" onclick="addItem('snackColumn2')">Add Item</button>
       </div>
     </div>
 
-    <!-- Export -->
+    <!-- Export Section -->
     <div class="admin-section" id="tab-export">
-      <p style="color:#888;margin-bottom:14px;line-height:1.6;">
-        Changes you make here are <b style="color:#ffd700">live immediately</b> — all menu pages load from the same data.<br>
-        Use the export below to save a backup or update <code style="background:#111;padding:2px 6px;border-radius:4px;color:#7fff7f">items.json</code> on disk so changes survive a browser reset.
-      </p>
-      <div class="export-row">
-        <button class="exp-btn green" onclick="generateExport()">🔄 Generate JSON</button>
-        <button class="exp-btn blue"  onclick="copyExport()">📋 Copy to Clipboard</button>
+      <div class="export-section">
+        <h3>📤 Export Menu Data</h3>
+        <p>Copy this JSON and save it to <strong>items.json</strong> to make your changes permanent. The TV displays will automatically pick up the new file.</p>
+        <textarea class="export-area" id="exportArea" readonly placeholder="Click 'Generate Export' to create JSON..."></textarea>
+        <div class="export-buttons">
+          <button class="export-btn primary" onclick="generateExport()">📋 Generate Export</button>
+          <button class="export-btn primary" onclick="copyExport()">📄 Copy to Clipboard</button>
+          <button class="export-btn secondary" onclick="downloadExport()">💾 Download JSON File</button>
+          <button class="export-btn danger" onclick="resetToJSON()">🔄 Reset to items.json</button>
+        </div>
       </div>
-      <textarea class="export-area" id="exportArea" readonly placeholder="Click Generate JSON..."></textarea>
+
+      <div class="export-section" style="margin-top: 16px;">
+        <h3>ℹ️ How It Works</h3>
+        <p style="line-height: 1.7;">
+          <strong>Live Edits:</strong> Your changes save to browser storage instantly.<br>
+          <strong>TV Displays:</strong> They check for live edits first, then fall back to items.json.<br>
+          <strong>Making It Permanent:</strong> Export your changes and save to items.json, then push to GitHub.<br>
+          <strong>Reset:</strong> Wipes all live edits and reloads from items.json.
+        </p>
+      </div>
     </div>
 
-    <div class="status-bar" id="statusBar">
-      Total items: <b id="totalCount">0</b> &nbsp;|&nbsp;
-      Out of stock: <b id="oosCount">0</b> &nbsp;|&nbsp;
-      Last saved: <b id="lastSaved">—</b>
-    </div>
   </div>
 </div>
 
@@ -370,81 +469,143 @@ h1 {
 </div>
 
 <script>
-// ── Data: loaded from items.json, kept in sync via localStorage ───────────────
-let menuData   = null;
-let editTarget = null;
+// ═══════════════════════════════════════════════════════════════════════════
+// IMPROVED MENU MANAGEMENT SYSTEM
+// For TV Display at Farmington Concession Stand
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Load items.json first, then overlay any adminMenuData changes on top
+let menuData = null;
+let editTarget = null;
+let originalData = null; // Track if data matches items.json
+
+// ── Initialize ───────────────────────────────────────────────────────────────
 async function initAdminData() {
   let fromFile = null;
+  
+  // Always try to load items.json for comparison
   try {
     const res = await fetch('items.json');
-    if (res.ok) fromFile = await res.json();
-  } catch(e) {}
+    if (res.ok) {
+      fromFile = await res.json();
+      originalData = JSON.stringify(fromFile);
+    }
+  } catch(e) {
+    console.warn('Could not load items.json:', e);
+  }
 
   const fromStorage = localStorage.getItem('adminMenuData');
 
   if (fromStorage) {
-    // localStorage wins — it has the latest admin edits
+    // Use localStorage data (live edits)
     menuData = JSON.parse(fromStorage);
+    updateSyncStatus(false); // Modified
   } else if (fromFile) {
-    // First time opening admin — seed from items.json
+    // First time - use items.json
     menuData = fromFile;
-    // Normalize: items.json uses numeric prices, admin panel uses "$X.XX" strings
-    ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(col => {
-      (menuData[col]||[]).forEach(item => {
-        if (typeof item.price === 'number') item.price = '$' + item.price.toFixed(2);
-        // items.json uses "img" key; ensure compatibility
-        if (!item.img && item.image) item.img = item.image;
-        if (item.outOfStock === undefined) item.outOfStock = false;
-      });
-    });
-    saveData(); // persist to localStorage so future opens use this
+    normalizeData();
+    saveData(); // Persist initial state
+    updateSyncStatus(true); // Synced
   } else {
-    // No items.json and no localStorage — show empty state
-    menuData = { foodColumn:[], drinkColumn:[], snackColumn:[], snackColumn2:[] };
+    // No data source - start empty
+    menuData = { 
+      foodColumn: [], 
+      drinkColumn: [], 
+      snackColumn: [], 
+      snackColumn2: [] 
+    };
+    updateSyncStatus(true);
   }
 
   renderAll();
   updateStatus();
 }
 
-// ── Persist & status ─────────────────────────────────────────────────────────
+// ── Data Normalization ───────────────────────────────────────────────────────
+function normalizeData() {
+  // Ensure consistent format for admin panel
+  ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(col => {
+    (menuData[col] || []).forEach(item => {
+      // Convert numeric prices to string format
+      if (typeof item.price === 'number') {
+        item.price = '$' + item.price.toFixed(2);
+      }
+      // Ensure price has $ prefix
+      if (item.price && !item.price.startsWith('$')) {
+        item.price = '$' + item.price;
+      }
+      // Normalize image field
+      if (!item.img && item.image) item.img = item.image;
+      // Ensure outOfStock field exists
+      if (item.outOfStock === undefined) item.outOfStock = false;
+    });
+  });
+}
+
+// ── Save & Status ────────────────────────────────────────────────────────────
 function saveData() {
   localStorage.setItem('adminMenuData', JSON.stringify(menuData));
+  
+  // Update timestamp
   const t = new Date();
-  document.getElementById('lastSaved').textContent = t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('lastSaved').textContent = 
+    t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  
+  // Check if modified from original
+  const isModified = originalData && (JSON.stringify(menuData) !== originalData);
+  updateSyncStatus(!isModified);
+  
   updateStatus();
 }
 
-function updateStatus() {
-  let total=0, oos=0;
-  Object.values(menuData).forEach(col => col.forEach(i => { total++; if(i.outOfStock) oos++; }));
-  document.getElementById('totalCount').textContent = total;
-  document.getElementById('oosCount').textContent   = oos;
+function updateSyncStatus(synced) {
+  const statusEl = document.getElementById('syncStatus');
+  if (synced) {
+    statusEl.textContent = '✓ Synced';
+    statusEl.className = 'sync-status synced';
+  } else {
+    statusEl.textContent = '⚠ Modified';
+    statusEl.className = 'sync-status modified';
+  }
 }
 
-// ── Render item list ─────────────────────────────────────────────────────────
+function updateStatus() {
+  let total = 0, oos = 0;
+  Object.values(menuData).forEach(col => {
+    (col || []).forEach(item => {
+      total++;
+      if (item.outOfStock) oos++;
+    });
+  });
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('oosCount').textContent = oos;
+}
+
+// ── Render Functions ─────────────────────────────────────────────────────────
 function renderList(col) {
-  const el = document.getElementById('list-'+col);
+  const el = document.getElementById('list-' + col);
+  if (!el) return;
+  
   el.innerHTML = '';
-  (menuData[col]||[]).forEach((item, idx) => {
+  (menuData[col] || []).forEach((item, idx) => {
     const row = document.createElement('div');
     row.className = 'admin-item-row';
     row.innerHTML = `
       <img src="${item.img}" alt="${item.name}"
-        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect width=%2248%22 height=%2248%22 fill=%22%23333%22/><text x=%2224%22 y=%2230%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2218%22>?</text></svg>'">
+        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect width=%2248%22 height=%2248%22 fill=%22%23333%22/%3E%3Ctext x=%2224%22 y=%2230%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2218%22%3E?%3C/text%3E%3C/svg%3E'">
       <div class="admin-item-info">
-        <div class="iname">${item.name}</div>
-        <div class="iprice">${item.price}</div>
+        <div class="iname">${escapeHtml(item.name)}</div>
+        <div class="iprice">${escapeHtml(item.price)}</div>
       </div>
       <div class="admin-item-actions">
-        <button class="oos-toggle ${item.outOfStock?'out-stock':'in-stock'}" onclick="toggleOOS('${col}',${idx})">
+        <button class="oos-toggle ${item.outOfStock ? 'out-stock' : 'in-stock'}" 
+                onclick="toggleOOS('${col}', ${idx})"
+                aria-label="${item.outOfStock ? 'Mark in stock' : 'Mark out of stock'}">
           ${item.outOfStock ? '❌ Out' : '✅ In Stock'}
         </button>
-        <button class="edit-btn-a" onclick="openEdit('${col}',${idx})">✏️</button>
-        <button class="del-btn-a"  onclick="deleteItem('${col}',${idx})">🗑</button>
-      </div>`;
+        <button class="edit-btn-a" onclick="openEdit('${col}', ${idx})" aria-label="Edit item">✏️</button>
+        <button class="del-btn-a" onclick="deleteItem('${col}', ${idx})" aria-label="Delete item">🗑</button>
+      </div>
+    `;
     el.appendChild(row);
   });
   updateStatus();
@@ -455,57 +616,86 @@ function renderAll() {
   ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(renderList);
 }
 
-// ── Tab switching ────────────────────────────────────────────────────────────
+// ── Tab Switching ────────────────────────────────────────────────────────────
 function switchTab(tab, btn) {
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
 }
 
-// ── CRUD ─────────────────────────────────────────────────────────────────────
+// ── CRUD Operations ──────────────────────────────────────────────────────────
 function toggleOOS(col, idx) {
   menuData[col][idx].outOfStock = !menuData[col][idx].outOfStock;
-  saveData(); renderList(col);
+  saveData();
+  renderList(col);
 }
 
 function deleteItem(col, idx) {
-  if (!confirm(`Remove "${menuData[col][idx].name}"?`)) return;
+  const item = menuData[col][idx];
+  if (!confirm(`Remove "${item.name}"?\n\nThis action cannot be undone.`)) return;
+  
   menuData[col].splice(idx, 1);
-  saveData(); renderList(col);
+  saveData();
+  renderList(col);
 }
 
 function addItem(col) {
-  const name  = document.getElementById('add-name-'+col).value.trim();
-  const price = document.getElementById('add-price-'+col).value.trim();
-  const img   = document.getElementById('add-img-'+col).value.trim();
-  if (!name||!price||!img) { alert('Please fill in all fields.'); return; }
-  menuData[col].push({ name, price: price.startsWith('$')?price:'$'+price, img, outOfStock:false });
-  saveData(); renderList(col);
-  ['name','price','img'].forEach(f => document.getElementById('add-'+f+'-'+col).value='');
+  const name = document.getElementById('add-name-' + col).value.trim();
+  const price = document.getElementById('add-price-' + col).value.trim();
+  const img = document.getElementById('add-img-' + col).value.trim();
+  
+  if (!name || !price || !img) {
+    alert('⚠️ Please fill in all fields (Name, Price, Image).');
+    return;
+  }
+  
+  // Ensure price has $ prefix
+  const formattedPrice = price.startsWith('$') ? price : '$' + price;
+  
+  menuData[col].push({
+    name: name,
+    price: formattedPrice,
+    img: img,
+    outOfStock: false
+  });
+  
+  saveData();
+  renderList(col);
+  
+  // Clear form
+  document.getElementById('add-name-' + col).value = '';
+  document.getElementById('add-price-' + col).value = '';
+  document.getElementById('add-img-' + col).value = '';
 }
 
-// ── Edit modal ───────────────────────────────────────────────────────────────
+// ── Edit Modal ───────────────────────────────────────────────────────────────
 function openEdit(col, idx) {
-  editTarget = {col, idx};
+  editTarget = { col, idx };
   const item = menuData[col][idx];
-  document.getElementById('edit-name').value  = item.name;
+  
+  document.getElementById('edit-name').value = item.name;
   document.getElementById('edit-price').value = item.price;
-  document.getElementById('edit-img').value   = item.img;
+  document.getElementById('edit-img').value = item.img;
   document.getElementById('editModal').classList.add('open');
 }
 
 function saveEdit() {
   if (!editTarget) return;
-  const {col, idx} = editTarget;
+  
+  const { col, idx } = editTarget;
   const price = document.getElementById('edit-price').value.trim();
+  
   menuData[col][idx] = {
     ...menuData[col][idx],
-    name:  document.getElementById('edit-name').value.trim(),
-    price: price.startsWith('$') ? price : '$'+price,
-    img:   document.getElementById('edit-img').value.trim()
+    name: document.getElementById('edit-name').value.trim(),
+    price: price.startsWith('$') ? price : '$' + price,
+    img: document.getElementById('edit-img').value.trim()
   };
-  saveData(); renderList(col); closeEdit();
+  
+  saveData();
+  renderList(col);
+  closeEdit();
 }
 
 function closeEdit() {
@@ -513,8 +703,9 @@ function closeEdit() {
   editTarget = null;
 }
 
-// ── Admin open/close ─────────────────────────────────────────────────────────
+// ── Admin Panel Control ──────────────────────────────────────────────────────
 let adminInitialized = false;
+
 function openAdmin() {
   document.getElementById('adminOverlay').classList.add('open');
   if (!adminInitialized) {
@@ -524,19 +715,85 @@ function openAdmin() {
     renderAll();
   }
 }
-function closeAdmin() { document.getElementById('adminOverlay').classList.remove('open'); }
 
-// ── Export ───────────────────────────────────────────────────────────────────
-function generateExport() {
-  document.getElementById('exportArea').value = JSON.stringify(menuData, null, 2);
+function closeAdmin() {
+  document.getElementById('adminOverlay').classList.remove('open');
 }
+
+// ── Export Functions ─────────────────────────────────────────────────────────
+function generateExport() {
+  const exportData = JSON.parse(JSON.stringify(menuData)); // Deep copy
+  
+  // Format for items.json (clean format)
+  const formatted = JSON.stringify(exportData, null, 2);
+  document.getElementById('exportArea').value = formatted;
+}
+
 function copyExport() {
   const area = document.getElementById('exportArea');
   if (!area.value) generateExport();
+  
   navigator.clipboard.writeText(area.value)
-    .then(() => alert('✅ Copied! Paste this into items.json to save permanently.'))
-    .catch(() => { area.select(); document.execCommand('copy'); alert('✅ Copied!'); });
+    .then(() => {
+      alert('✅ JSON copied to clipboard!\n\nNext steps:\n1. Open items.json in your code editor\n2. Replace all contents with the copied JSON\n3. Save the file\n4. Push to GitHub to update the TV displays');
+    })
+    .catch(() => {
+      // Fallback for older browsers
+      area.select();
+      document.execCommand('copy');
+      alert('✅ JSON copied!');
+    });
 }
+
+function downloadExport() {
+  if (!document.getElementById('exportArea').value) generateExport();
+  
+  const data = document.getElementById('exportArea').value;
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'items.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  alert('✅ Downloaded items.json!\n\nUpload this file to your GitHub repository to update the TV displays.');
+}
+
+async function resetToJSON() {
+  if (!confirm('⚠️ RESET TO ORIGINAL\n\nThis will:\n• Delete all live edits\n• Reload fresh data from items.json\n• Cannot be undone\n\nContinue?')) {
+    return;
+  }
+  
+  localStorage.removeItem('adminMenuData');
+  menuData = null;
+  await initAdminData();
+  alert('✅ Data reset successfully!\n\nAll live edits have been cleared. Now showing data from items.json.');
+}
+
+// ── Utility Functions ────────────────────────────────────────────────────────
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// ── Keyboard Shortcuts (Optional) ────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  // Escape key closes modals
+  if (e.key === 'Escape') {
+    if (document.getElementById('editModal').classList.contains('open')) {
+      closeEdit();
+    } else if (document.getElementById('adminOverlay').classList.contains('open')) {
+      closeAdmin();
+    }
+  }
+});
 </script>
 </body>
 </html>
