@@ -1,0 +1,30 @@
+{
+  "foodColumn": [
+    { "name": "Walking Taco", "price": "$5.00", "img": "../images/walking-tacos.jpg", "outOfStock": false },
+    { "name": "Nachos", "price": "$3.00", "img": "../images/nachos.jpg", "outOfStock": false },
+    { "name": "Pretzel w/ Cheese", "price": "$4.00", "img": "../images/Pretzel-Cheese.jpg", "outOfStock": false },
+    { "name": "Hot Dog", "price": "$3.00", "img": "../images/hotdog.jpg", "outOfStock": false }
+  ],
+  "drinkColumn": [
+    { "name": "Soda", "price": "$3.00", "img": "../images/soda.webp", "outOfStock": false },
+    { "name": "Water", "price": "$3.00", "img": "../images/water.jpg", "outOfStock": false },
+    { "name": "Sweet Tea", "price": "$3.00", "img": "../images/sweet-tea.jpg", "outOfStock": false },
+    { "name": "Coffee", "price": "$1.00", "img": "../images/coffee.jpg", "outOfStock": false },
+    { "name": "Hot Chocolate", "price": "$1.00", "img": "../images/Hot-Chocolate.jpg", "outOfStock": false },
+    { "name": "Powerade", "price": "$3.00", "img": "../images/Powerade.jpg", "outOfStock": false }
+  ],
+  "snackColumn": [
+    { "name": "Airheads", "price": "$0.25", "img": "../images/Airheads.jpg", "outOfStock": false },
+    { "name": "Candy", "price": "$2.00", "img": "../images/Candy.jpg", "outOfStock": false },
+    { "name": "Cotton Candy", "price": "$2.00", "img": "../images/Cotton-Candy.jpg", "outOfStock": false },
+    { "name": "Gum", "price": "$1.00", "img": "../images/gum.jpg", "outOfStock": false },
+    { "name": "Seeds", "price": "$1.00", "img": "../images/Seeds.jpg", "outOfStock": false },
+    { "name": "Cookies", "price": "$1.00", "img": "../images/Cookies.jpg", "outOfStock": false }
+  ],
+  "snackColumn2": [
+    { "name": "Chips", "price": "$1.00", "img": "../images/Chips.webp", "outOfStock": false },
+    { "name": "Popcorn", "price": "$1.00", "img": "../images/Popcorn.jpg", "outOfStock": false },
+    { "name": "Jerky", "price": "$2.50", "img": "../images/Jerky.jpg", "outOfStock": false },
+    { "name": "Pickle", "price": "$1.00", "img": "../images/Pickle.jpg", "outOfStock": false }
+  ]
+}

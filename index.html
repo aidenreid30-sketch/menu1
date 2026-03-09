@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu Launcher - Farmington Concession Stand</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 20px 80px;
+  overflow-x: hidden;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
+}
+.background-decoration {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  overflow: hidden; z-index: 0; pointer-events: none;
+}
+.particle {
+  position: absolute; width: 4px; height: 4px;
+  background: rgba(255,215,0,0.3); border-radius: 50%;
+  animation: float 6s infinite ease-in-out;
+}
+.particle:nth-child(1){left:10%;top:20%;animation-delay:0s}
+.particle:nth-child(2){left:80%;top:30%;animation-delay:1s}
+.particle:nth-child(3){left:30%;top:70%;animation-delay:2s}
+.particle:nth-child(4){left:70%;top:60%;animation-delay:1.5s}
+.particle:nth-child(5){left:50%;top:40%;animation-delay:0.5s}
+
+.content-wrapper {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 1200px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+h1 {
+  font-size: clamp(40px, 8vw, 70px); margin-bottom: 10px;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: titleGlow 3s ease-in-out infinite;
+  font-weight: 800; letter-spacing: 2px;
+}
+@keyframes titleGlow {
+  0%,100%{filter:drop-shadow(0 0 10px rgba(255,215,0,.5))}
+  50%    {filter:drop-shadow(0 0 20px rgba(255,215,0,.8))}
+}
+.subtitle { font-size: clamp(18px,3vw,24px); margin-bottom: 50px; color: #ccc; letter-spacing: 1px; }
+
+/* ── Launcher buttons ── */
+.launcher { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; padding: 20px; }
+
+.button {
+  width: 280px; height: 180px; border-radius: 25px;
+  font-size: 26px; font-weight: bold; cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+  position: relative; overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none; color: white;
+}
+.button::before {
+  content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  transition: left 0.5s;
+}
+.button:hover::before { left: 100%; }
+.button:hover { transform: translateY(-10px) scale(1.05); box-shadow: 0 20px 40px rgba(0,0,0,0.4); border-color: rgba(255,215,0,0.5); }
+.button:active { transform: translateY(-5px) scale(1.02); }
+.button:focus  { outline: 3px solid #ffd700; outline-offset: 3px; }
+
+.main        { background: linear-gradient(145deg,#2196f3,#1565c0); }
+.main:hover  { background: linear-gradient(145deg,#42a5f5,#1976d2); }
+.thanksgiving{ background: linear-gradient(145deg,#ff9800,#6d4c41); }
+.thanksgiving:hover { background: linear-gradient(145deg,#ffa726,#795548); }
+.baseball    { background: linear-gradient(145deg,#cc0000,#990000); }
+.baseball:hover { background: linear-gradient(145deg,#e60000,#cc0000); }
+
+.button:nth-child(1){animation:fadeIn .6s ease-out .2s backwards}
+.button:nth-child(2){animation:fadeIn .6s ease-out .4s backwards}
+.button:nth-child(3){animation:fadeIn .6s ease-out .6s backwards}
+.button:nth-child(4){animation:fadeIn .6s ease-out .8s backwards}
+
+@keyframes fadeIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+
+/* ── Admin tab bar ── */
+.admin-tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: #111; border-top: 2px solid #ffd700;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 10px 20px; z-index: 100;
+}
+.admin-tab-bar-label { color: #888; font-size: 14px; }
+.admin-open-btn {
+  background: linear-gradient(145deg,#ffd700,#ffb300);
+  color: #1a1a1a; font-size: 16px; font-weight: bold;
+  border: none; border-radius: 10px; padding: 10px 28px;
+  cursor: pointer; transition: all 0.3s; letter-spacing: 1px;
+}
+.admin-open-btn:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(255,215,0,0.4); }
+
+/* ── Admin overlay ── */
+#adminOverlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.95); z-index: 200;
+  overflow-y: auto; padding: 30px 20px 80px;
+}
+#adminOverlay.open { display: block; }
+
+.admin-panel {
+  max-width: 920px; margin: 0 auto;
+  background: #1e1e1e; border: 2px solid #ffd700;
+  border-radius: 20px; padding: 30px;
+  animation: fadeIn 0.3s ease-out;
+}
+.admin-panel-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+.admin-panel h2 { font-size: 30px; color: #ffd700; letter-spacing: 2px; }
+.admin-sub { color: #888; font-size: 13px; margin-bottom: 22px; }
+.close-admin-btn {
+  background: #2a2a2a; color: #fff; border: 1px solid #444;
+  border-radius: 8px; padding: 8px 16px; font-size: 15px;
+  cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+}
+.close-admin-btn:hover { background: #444; }
+
+/* Sync status */
+.sync-status {
+  display: inline-block; padding: 6px 12px; border-radius: 6px;
+  font-size: 12px; font-weight: bold; margin-left: 12px;
+}
+.sync-status.synced { background: #2e7d32; color: white; }
+.sync-status.modified { background: #ff9800; color: white; }
+
+/* Category tabs */
+.admin-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; border-bottom: 2px solid #2a2a2a; padding-bottom: 10px; }
+.admin-tab {
+  padding: 8px 16px; border-radius: 8px 8px 0 0; border: none;
+  background: #2a2a2a; color: #888; font-size: 14px; font-weight: bold;
+  cursor: pointer; transition: all 0.2s;
+}
+.admin-tab.active,.admin-tab:hover { background: #ffd700; color: #1a1a1a; }
+
+.admin-section { display: none; }
+.admin-section.active { display: block; }
+
+/* Stats bar */
+.stats-bar {
+  display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+  background: #252525; border-radius: 10px; padding: 12px 20px;
+  margin-bottom: 20px; border: 1px solid #383838;
+}
+.stat-item { text-align: center; }
+.stat-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value { font-size: 20px; font-weight: bold; color: #ffd700; margin-top: 2px; }
+
+/* Item rows */
+.admin-item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+.admin-item-row {
+  display: flex; align-items: center; gap: 10px;
+  background: #252525; border: 1px solid #383838; border-radius: 10px; padding: 10px 14px;
+  transition: all 0.2s;
+}
+.admin-item-row:hover { border-color: #ffd700; background: #2a2a2a; }
+.admin-item-row img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 2px solid #444; flex-shrink: 0; }
+.admin-item-info { flex: 1; text-align: left; min-width: 0; }
+.admin-item-info .iname { font-size: 15px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-item-info .iprice { font-size: 13px; color: #ffd700; }
+.admin-item-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+.oos-toggle { padding: 5px 11px; border-radius: 6px; border: none; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.oos-toggle.in-stock  { background: #2e7d32; color: #fff; }
+.oos-toggle.out-stock { background: #b71c1c; color: #fff; }
+.oos-toggle:hover { opacity: 0.85; transform: scale(1.04); }
+.edit-btn-a { padding: 5px 11px; background: #1565c0; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.edit-btn-a:hover { background: #1e88e5; }
+.del-btn-a  { padding: 5px 9px; background: #7a0c02; color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+.del-btn-a:hover { background: #c62828; }
+
+/* Add form */
+.add-item-form { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 18px; }
+.add-item-form h3 { color: #ffd700; margin-bottom: 14px; font-size: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.form-row.full { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.form-group label { font-size: 12px; color: #999; font-weight: bold; text-transform: uppercase; letter-spacing: .5px; }
+.form-group input, .form-group select {
+  padding: 9px 12px; border-radius: 8px; border: 2px solid #383838;
+  background: #1a1a1a; color: #fff; font-size: 14px; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #ffd700; }
+.add-btn-a {
+  width: 100%; padding: 11px; background: linear-gradient(145deg,#ffd700,#ffb300);
+  color: #1a1a1a; font-size: 14px; font-weight: bold; border: none;
+  border-radius: 8px; cursor: pointer; transition: all 0.2s; margin-top: 6px;
+}
+.add-btn-a:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); transform: translateY(-1px); }
+
+/* Export section */
+.export-section { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 18px; margin-top: 20px; }
+.export-section h3 { color: #ffd700; margin-bottom: 12px; font-size: 16px; }
+.export-section p { color: #aaa; font-size: 13px; margin-bottom: 12px; line-height: 1.5; }
+.export-area { width: 100%; height: 160px; background: #1a1a1a; color: #fff; border: 2px solid #383838; border-radius: 8px; padding: 12px; font-family: 'Courier New', monospace; font-size: 12px; resize: vertical; margin-bottom: 10px; }
+.export-area:focus { outline: none; border-color: #ffd700; }
+.export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.export-btn {
+  padding: 9px 18px; border-radius: 8px; border: none; font-size: 14px;
+  font-weight: bold; cursor: pointer; transition: all 0.2s;
+}
+.export-btn.primary { background: linear-gradient(145deg,#ffd700,#ffb300); color: #1a1a1a; }
+.export-btn.primary:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); }
+.export-btn.secondary { background: #2a2a2a; color: #fff; border: 1px solid #444; }
+.export-btn.secondary:hover { background: #383838; }
+.export-btn.danger { background: #c62828; color: #fff; }
+.export-btn.danger:hover { background: #b71c1c; }
+
+/* Edit modal */
+#editModal {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+  z-index: 300; align-items: center; justify-content: center; padding: 20px;
+}
+#editModal.open { display: flex; }
+.edit-box {
+  background: #1e1e1e; border: 2px solid #ffd700; border-radius: 16px;
+  padding: 28px; width: 100%; max-width: 480px;
+  animation: fadeIn 0.3s ease-out;
+}
+.edit-box h3 { color: #ffd700; margin-bottom: 20px; font-size: 22px; }
+.edit-field {
+  width: 100%; padding: 10px 14px; margin-bottom: 14px;
+  background: #1a1a1a; color: #fff; border: 2px solid #383838;
+  border-radius: 8px; font-size: 14px; transition: border-color 0.2s;
+}
+.edit-field:focus { outline: none; border-color: #ffd700; }
+.edit-actions { display: flex; gap: 10px; margin-top: 20px; }
+.save-edit, .cancel-edit {
+  flex: 1; padding: 11px; border-radius: 8px; border: none;
+  font-size: 15px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+}
+.save-edit { background: linear-gradient(145deg,#ffd700,#ffb300); color: #1a1a1a; }
+.save-edit:hover { background: linear-gradient(145deg,#ffed4e,#ffd700); }
+.cancel-edit { background: #2a2a2a; color: #fff; }
+.cancel-edit:hover { background: #444; }
+
+@media(max-width:768px) {
+  .form-row { grid-template-columns: 1fr; }
+  .stats-bar { gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="background-decoration">
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+</div>
+
+<div class="content-wrapper">
+  <h1>🍿 Concession Menu</h1>
+  <p class="subtitle">Farmington, Arkansas</p>
+
+  <div class="launcher">
+    <a href="main/index.html" class="button main">📺 Main Display</a>
+    <a href="Thanksgiving theme/index.html" class="button thanksgiving">🦃 Thanksgiving</a>
+    <a href="Baseball theme/index.html" class="button baseball">⚾ Baseball Theme</a>
+  </div>
+</div>
+
+<div class="admin-tab-bar">
+  <span class="admin-tab-bar-label">Staff:</span>
+  <button class="admin-open-btn" onclick="openAdmin()">⚙️ Admin Panel</button>
+</div>
+
+<!-- Admin Overlay -->
+<div id="adminOverlay">
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>⚙️ Menu Manager</h2>
+      </div>
+      <button class="close-admin-btn" onclick="closeAdmin()">✕ Close</button>
+    </div>
+    <p class="admin-sub">
+      Manage all menu items • Changes save automatically
+      <span class="sync-status" id="syncStatus">Loading...</span>
+    </p>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-label">Total Items</div>
+        <div class="stat-value" id="totalCount">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Out of Stock</div>
+        <div class="stat-value" id="oosCount">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Last Saved</div>
+        <div class="stat-value" id="lastSaved">--:--</div>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('foodColumn',this)">🍔 Food</button>
+      <button class="admin-tab" onclick="switchTab('drinkColumn',this)">🥤 Drinks</button>
+      <button class="admin-tab" onclick="switchTab('snackColumn',this)">🍿 Snacks</button>
+      <button class="admin-tab" onclick="switchTab('snackColumn2',this)">🍪 More Snacks</button>
+      <button class="admin-tab" onclick="switchTab('export',this)">📤 Export/Backup</button>
+    </div>
+
+    <!-- Food Section -->
+    <div class="admin-section active" id="tab-foodColumn">
+      <div class="admin-item-list" id="list-foodColumn"></div>
+      <div class="add-item-form">
+        <h3>➕ Add Food Item</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="add-name-foodColumn" placeholder="e.g., Hot Dog">
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="add-price-foodColumn" placeholder="$3.00">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Image Path</label>
+            <input type="text" id="add-img-foodColumn" placeholder="../images/hotdog.jpg">
+          </div>
+        </div>
+        <button class="add-btn-a" onclick="addItem('foodColumn')">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Drinks Section -->
+    <div class="admin-section" id="tab-drinkColumn">
+      <div class="admin-item-list" id="list-drinkColumn"></div>
+      <div class="add-item-form">
+        <h3>➕ Add Drink Item</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="add-name-drinkColumn" placeholder="e.g., Soda">
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="add-price-drinkColumn" placeholder="$2.00">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Image Path</label>
+            <input type="text" id="add-img-drinkColumn" placeholder="../images/soda.jpg">
+          </div>
+        </div>
+        <button class="add-btn-a" onclick="addItem('drinkColumn')">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Snacks Section -->
+    <div class="admin-section" id="tab-snackColumn">
+      <div class="admin-item-list" id="list-snackColumn"></div>
+      <div class="add-item-form">
+        <h3>➕ Add Snack Item</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="add-name-snackColumn" placeholder="e.g., Popcorn">
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="add-price-snackColumn" placeholder="$1.50">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Image Path</label>
+            <input type="text" id="add-img-snackColumn" placeholder="../images/popcorn.jpg">
+          </div>
+        </div>
+        <button class="add-btn-a" onclick="addItem('snackColumn')">Add Item</button>
+      </div>
+    </div>
+
+    <!-- More Snacks Section -->
+    <div class="admin-section" id="tab-snackColumn2">
+      <div class="admin-item-list" id="list-snackColumn2"></div>
+      <div class="add-item-form">
+        <h3>➕ Add Snack Item</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="add-name-snackColumn2" placeholder="e.g., Chips">
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="add-price-snackColumn2" placeholder="$1.00">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Image Path</label>
+            <input type="text" id="add-img-snackColumn2" placeholder="../images/chips.jpg">
+          </div>
+        </div>
+        <button class="add-btn-a" onclick="addItem('snackColumn2')">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Export Section -->
+    <div class="admin-section" id="tab-export">
+      <div class="export-section">
+        <h3>📤 Export Menu Data</h3>
+        <p>Copy this JSON and save it to <strong>items.json</strong> to make your changes permanent. The TV displays will automatically pick up the new file.</p>
+        <textarea class="export-area" id="exportArea" readonly placeholder="Click 'Generate Export' to create JSON..."></textarea>
+        <div class="export-buttons">
+          <button class="export-btn primary" onclick="generateExport()">📋 Generate Export</button>
+          <button class="export-btn primary" onclick="copyExport()">📄 Copy to Clipboard</button>
+          <button class="export-btn secondary" onclick="downloadExport()">💾 Download JSON File</button>
+          <button class="export-btn danger" onclick="resetToJSON()">🔄 Reset to items.json</button>
+        </div>
+      </div>
+
+      <div class="export-section" style="margin-top: 16px;">
+        <h3>ℹ️ How It Works</h3>
+        <p style="line-height: 1.7;">
+          <strong>Live Edits:</strong> Your changes save to browser storage instantly.<br>
+          <strong>TV Displays:</strong> They check for live edits first, then fall back to items.json.<br>
+          <strong>Making It Permanent:</strong> Export your changes and save to items.json, then push to GitHub.<br>
+          <strong>Reset:</strong> Wipes all live edits and reloads from items.json.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal">
+  <div class="edit-box">
+    <h3>✏️ Edit Item</h3>
+    <label style="font-size:12px;color:#999;display:block;margin-bottom:4px;text-align:left">NAME</label>
+    <input type="text" id="edit-name"  class="edit-field" placeholder="Item name">
+    <label style="font-size:12px;color:#999;display:block;margin-bottom:4px;text-align:left">PRICE</label>
+    <input type="text" id="edit-price" class="edit-field" placeholder="e.g., $3.00">
+    <label style="font-size:12px;color:#999;display:block;margin-bottom:4px;text-align:left">IMAGE PATH</label>
+    <input type="text" id="edit-img"   class="edit-field" placeholder="../images/example.jpg">
+    <div class="edit-actions">
+      <button class="save-edit"   onclick="saveEdit()">💾 Save</button>
+      <button class="cancel-edit" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// IMPROVED MENU MANAGEMENT SYSTEM
+// For TV Display at Farmington Concession Stand
+// ═══════════════════════════════════════════════════════════════════════════
+
+let menuData = null;
+let editTarget = null;
+let originalData = null; // Track if data matches items.json
+
+// ── Initialize ───────────────────────────────────────────────────────────────
+async function initAdminData() {
+  let fromFile = null;
+  
+  // Always try to load items.json for comparison
+  try {
+    const res = await fetch('items.json');
+    if (res.ok) {
+      fromFile = await res.json();
+      originalData = JSON.stringify(fromFile);
+    }
+  } catch(e) {
+    console.warn('Could not load items.json:', e);
+  }
+
+  const fromStorage = localStorage.getItem('adminMenuData');
+
+  if (fromStorage) {
+    // Use localStorage data (live edits)
+    menuData = JSON.parse(fromStorage);
+    updateSyncStatus(false); // Modified
+  } else if (fromFile) {
+    // First time - use items.json
+    menuData = fromFile;
+    normalizeData();
+    saveData(); // Persist initial state
+    updateSyncStatus(true); // Synced
+  } else {
+    // No data source - start empty
+    menuData = { 
+      foodColumn: [], 
+      drinkColumn: [], 
+      snackColumn: [], 
+      snackColumn2: [] 
+    };
+    updateSyncStatus(true);
+  }
+
+  renderAll();
+  updateStatus();
+}
+
+// ── Data Normalization ───────────────────────────────────────────────────────
+function normalizeData() {
+  // Ensure consistent format for admin panel
+  ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(col => {
+    (menuData[col] || []).forEach(item => {
+      // Convert numeric prices to string format
+      if (typeof item.price === 'number') {
+        item.price = '$' + item.price.toFixed(2);
+      }
+      // Ensure price has $ prefix
+      if (item.price && !item.price.startsWith('$')) {
+        item.price = '$' + item.price;
+      }
+      // Normalize image field
+      if (!item.img && item.image) item.img = item.image;
+      // Ensure outOfStock field exists
+      if (item.outOfStock === undefined) item.outOfStock = false;
+    });
+  });
+}
+
+// ── Save & Status ────────────────────────────────────────────────────────────
+function saveData() {
+  localStorage.setItem('adminMenuData', JSON.stringify(menuData));
+  
+  // Update timestamp
+  const t = new Date();
+  document.getElementById('lastSaved').textContent = 
+    t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  
+  // Check if modified from original
+  const isModified = originalData && (JSON.stringify(menuData) !== originalData);
+  updateSyncStatus(!isModified);
+  
+  updateStatus();
+}
+
+function updateSyncStatus(synced) {
+  const statusEl = document.getElementById('syncStatus');
+  if (synced) {
+    statusEl.textContent = '✓ Synced';
+    statusEl.className = 'sync-status synced';
+  } else {
+    statusEl.textContent = '⚠ Modified';
+    statusEl.className = 'sync-status modified';
+  }
+}
+
+function updateStatus() {
+  let total = 0, oos = 0;
+  Object.values(menuData).forEach(col => {
+    (col || []).forEach(item => {
+      total++;
+      if (item.outOfStock) oos++;
+    });
+  });
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('oosCount').textContent = oos;
+}
+
+// ── Render Functions ─────────────────────────────────────────────────────────
+function renderList(col) {
+  const el = document.getElementById('list-' + col);
+  if (!el) return;
+  
+  el.innerHTML = '';
+  (menuData[col] || []).forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'admin-item-row';
+    row.innerHTML = `
+      <img src="${item.img}" alt="${item.name}"
+        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect width=%2248%22 height=%2248%22 fill=%22%23333%22/%3E%3Ctext x=%2224%22 y=%2230%22 text-anchor=%22middle%22 fill=%22%23888%22 font-size=%2218%22%3E?%3C/text%3E%3C/svg%3E'">
+      <div class="admin-item-info">
+        <div class="iname">${escapeHtml(item.name)}</div>
+        <div class="iprice">${escapeHtml(item.price)}</div>
+      </div>
+      <div class="admin-item-actions">
+        <button class="oos-toggle ${item.outOfStock ? 'out-stock' : 'in-stock'}" 
+                onclick="toggleOOS('${col}', ${idx})"
+                aria-label="${item.outOfStock ? 'Mark in stock' : 'Mark out of stock'}">
+          ${item.outOfStock ? '❌ Out' : '✅ In Stock'}
+        </button>
+        <button class="edit-btn-a" onclick="openEdit('${col}', ${idx})" aria-label="Edit item">✏️</button>
+        <button class="del-btn-a" onclick="deleteItem('${col}', ${idx})" aria-label="Delete item">🗑</button>
+      </div>
+    `;
+    el.appendChild(row);
+  });
+  updateStatus();
+}
+
+function renderAll() {
+  if (!menuData) return;
+  ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(renderList);
+}
+
+// ── Tab Switching ────────────────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ── CRUD Operations ──────────────────────────────────────────────────────────
+function toggleOOS(col, idx) {
+  menuData[col][idx].outOfStock = !menuData[col][idx].outOfStock;
+  saveData();
+  renderList(col);
+}
+
+function deleteItem(col, idx) {
+  const item = menuData[col][idx];
+  if (!confirm(`Remove "${item.name}"?\n\nThis action cannot be undone.`)) return;
+  
+  menuData[col].splice(idx, 1);
+  saveData();
+  renderList(col);
+}
+
+function addItem(col) {
+  const name = document.getElementById('add-name-' + col).value.trim();
+  const price = document.getElementById('add-price-' + col).value.trim();
+  const img = document.getElementById('add-img-' + col).value.trim();
+  
+  if (!name || !price || !img) {
+    alert('⚠️ Please fill in all fields (Name, Price, Image).');
+    return;
+  }
+  
+  // Ensure price has $ prefix
+  const formattedPrice = price.startsWith('$') ? price : '$' + price;
+  
+  menuData[col].push({
+    name: name,
+    price: formattedPrice,
+    img: img,
+    outOfStock: false
+  });
+  
+  saveData();
+  renderList(col);
+  
+  // Clear form
+  document.getElementById('add-name-' + col).value = '';
+  document.getElementById('add-price-' + col).value = '';
+  document.getElementById('add-img-' + col).value = '';
+}
+
+// ── Edit Modal ───────────────────────────────────────────────────────────────
+function openEdit(col, idx) {
+  editTarget = { col, idx };
+  const item = menuData[col][idx];
+  
+  document.getElementById('edit-name').value = item.name;
+  document.getElementById('edit-price').value = item.price;
+  document.getElementById('edit-img').value = item.img;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveEdit() {
+  if (!editTarget) return;
+  
+  const { col, idx } = editTarget;
+  const price = document.getElementById('edit-price').value.trim();
+  
+  menuData[col][idx] = {
+    ...menuData[col][idx],
+    name: document.getElementById('edit-name').value.trim(),
+    price: price.startsWith('$') ? price : '$' + price,
+    img: document.getElementById('edit-img').value.trim()
+  };
+  
+  saveData();
+  renderList(col);
+  closeEdit();
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('open');
+  editTarget = null;
+}
+
+// ── Admin Panel Control ──────────────────────────────────────────────────────
+let adminInitialized = false;
+
+function openAdmin() {
+  document.getElementById('adminOverlay').classList.add('open');
+  if (!adminInitialized) {
+    adminInitialized = true;
+    initAdminData();
+  } else {
+    renderAll();
+  }
+}
+
+function closeAdmin() {
+  document.getElementById('adminOverlay').classList.remove('open');
+}
+
+// ── Export Functions ─────────────────────────────────────────────────────────
+function generateExport() {
+  const exportData = JSON.parse(JSON.stringify(menuData)); // Deep copy
+  
+  // Format for items.json (clean format)
+  const formatted = JSON.stringify(exportData, null, 2);
+  document.getElementById('exportArea').value = formatted;
+}
+
+function copyExport() {
+  const area = document.getElementById('exportArea');
+  if (!area.value) generateExport();
+  
+  navigator.clipboard.writeText(area.value)
+    .then(() => {
+      alert('✅ JSON copied to clipboard!\n\nNext steps:\n1. Open items.json in your code editor\n2. Replace all contents with the copied JSON\n3. Save the file\n4. Push to GitHub to update the TV displays');
+    })
+    .catch(() => {
+      // Fallback for older browsers
+      area.select();
+      document.execCommand('copy');
+      alert('✅ JSON copied!');
+    });
+}
+
+function downloadExport() {
+  if (!document.getElementById('exportArea').value) generateExport();
+  
+  const data = document.getElementById('exportArea').value;
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'items.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  alert('✅ Downloaded items.json!\n\nUpload this file to your GitHub repository to update the TV displays.');
+}
+
+async function resetToJSON() {
+  if (!confirm('⚠️ RESET TO ORIGINAL\n\nThis will:\n• Delete all live edits\n• Reload fresh data from items.json\n• Cannot be undone\n\nContinue?')) {
+    return;
+  }
+  
+  localStorage.removeItem('adminMenuData');
+  menuData = null;
+  await initAdminData();
+  alert('✅ Data reset successfully!\n\nAll live edits have been cleared. Now showing data from items.json.');
+}
+
+// ── Utility Functions ────────────────────────────────────────────────────────
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// ── Keyboard Shortcuts (Optional) ────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  // Escape key closes modals
+  if (e.key === 'Escape') {
+    if (document.getElementById('editModal').classList.contains('open')) {
+      closeEdit();
+    } else if (document.getElementById('adminOverlay').classList.contains('open')) {
+      closeAdmin();
+    }
+  }
+});
+</script>
+</body>
+</html>
