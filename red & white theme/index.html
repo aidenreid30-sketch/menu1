@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baseball Day Menu</title>
+  <link rel="stylesheet" href="themecss/index.css">
+</head>
+<body>
+
+<!-- Floating baseballs -->
+<div class="baseball">⚾</div>
+<div class="baseball">⚾</div>
+<div class="baseball">⚾</div>
+<div class="baseball">⚾</div>
+<div class="baseball">⚾</div>
+<div class="baseball">⚾</div>
+
+<div class="header">
+  <h1>⚾ Red &amp; White Day Menu ⚾</h1>
+  <h2>Play Ball — Grab a Snack!</h2>
+</div>
+
+
+<div class="form-container">
+  <div id="addItemForm">
+    <h3>Add Menu Item</h3>
+    <label for="newCategory">Category:</label>
+    <select id="newCategory">
+      <option value="foodColumn">Food</option>
+      <option value="drinkColumn">Drinks</option>
+      <option value="snackColumn">Snacks</option>
+      <option value="snackColumn2">More Snacks</option>
+    </select>
+    <label for="newName">Item Name:</label>
+    <input id="newName" type="text" placeholder="e.g., Pretzel">
+    <label for="newPrice">Price:</label>
+    <input id="newPrice" type="text" placeholder="e.g., 2.50">
+    <label for="newImage">Image Path:</label>
+    <input id="newImage" type="text" placeholder="e.g., ../images/pretzel.jpg">
+    <button id="saveNewItem">Add Item</button>
+  </div>
+</div>
+
+<p id="loadingMsg">Loading menu...</p>
+<p id="errorMsg">⚠️ Could not load items.json. Make sure it's in the root project folder.</p>
+
+<div class="menu-container" id="menuContainer" style="display:none">
+  <div class="menu-column" id="foodColumn"><div class="menu-header">FOOD</div></div>
+  <div class="menu-column" id="drinkColumn"><div class="menu-header">DRINKS</div></div>
+  <div class="menu-column" id="snackColumn"><div class="menu-header">SNACKS</div></div>
+  <div class="menu-column" id="snackColumn2"><div class="menu-header">MORE SNACKS</div></div>
+</div>
+
+<img src="../images/logo.jpg" class="bottom-right-image" alt="Logo">
+
+<script>
+function saveStatus() {
+  const items = {foodColumn:[], drinkColumn:[], snackColumn:[], snackColumn2:[]};
+  ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(col => {
+    document.querySelectorAll(`#${col} .item`).forEach(item => {
+      items[col].push({
+        name: item.querySelector('.item-name').textContent.trim(),
+        price: item.querySelector('.item-price').textContent.trim(),
+        img: item.querySelector('img') ? item.querySelector('img').getAttribute('src') : '',
+        outOfStock: item.classList.contains('out-of-stock')
+      });
+    });
+  });
+  localStorage.setItem('adminMenuData', JSON.stringify(items));
+}
+
+function attachToggle(item, column) {
+  const handler = () => {
+    item.classList.toggle('out-of-stock');
+    column.removeChild(item);
+    if (item.classList.contains('out-of-stock')) {
+      column.appendChild(item);
+    } else {
+      const firstOut = column.querySelector('.out-of-stock');
+      firstOut ? column.insertBefore(item, firstOut) : column.appendChild(item);
+    }
+    saveStatus();
+  };
+  item.addEventListener('click', handler);
+  item.addEventListener('keypress', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); handler(); } });
+}
+
+function attachRemoveBtn(item) {
+  const btn = document.createElement('button');
+  btn.className = 'remove-btn';
+  btn.textContent = '✕';
+  btn.setAttribute('aria-label', 'Remove item');
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (confirm('Remove this item?')) { item.remove(); saveStatus(); }
+  });
+  item.appendChild(btn);
+}
+
+function buildItem(data, column) {
+  const div = document.createElement('div');
+  div.className = 'item' + (data.outOfStock ? ' out-of-stock' : '');
+  div.setAttribute('tabindex', '0');
+  div.innerHTML = `
+    <img src="${data.img}" alt="${data.name}" onerror="this.style.display='none'">
+    <div class="item-text">
+      <p class="item-name">${data.name}</p>
+      <p class="item-price">${data.price}</p>
+    </div>`;
+  attachToggle(div, column);
+  attachRemoveBtn(div);
+  return div;
+}
+
+async function loadMenu() {
+  try {
+    let data;
+    // ALWAYS check global Admin data first!
+    const savedData = localStorage.getItem('adminMenuData');
+    if (savedData) {
+      data = JSON.parse(savedData);
+    } else {
+      const res = await fetch('../items.json');
+      if (!res.ok) throw new Error('Fetch failed');
+      data = await res.json();
+    }
+
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('menuContainer').style.display = 'grid';
+
+    ['foodColumn', 'drinkColumn', 'snackColumn', 'snackColumn2'].forEach(colName => {
+      const column = document.getElementById(colName);
+      // Clear old items on refresh
+      const items = Array.from(column.children);
+      items.forEach(item => { if (!item.classList.contains('menu-header')) item.remove(); });
+      
+      (data[colName] || []).forEach(itemData => {
+        column.appendChild(buildItem(itemData, column));
+      });
+    });
+  } catch(e) {
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('errorMsg').style.display = 'block';
+  }
+}
+
+document.getElementById('addItemBtn')?.addEventListener('click', () => {
+  const form = document.getElementById('addItemForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('saveNewItem').addEventListener('click', () => {
+  const category = document.getElementById('newCategory').value;
+  const name  = document.getElementById('newName').value.trim();
+  const price = document.getElementById('newPrice').value.trim();
+  const img   = document.getElementById('newImage').value.trim();
+  if (!name || !price || !img) { alert('Please fill all fields!'); return; }
+  
+  const column = document.getElementById(category);
+  const item = buildItem({ name, price: price.startsWith('$') ? price : '$'+price, img, outOfStock: false }, column);
+  column.appendChild(item);
+  saveStatus(); // Automatically syncs across everything
+  
+  document.getElementById('newName').value = '';
+  document.getElementById('newPrice').value = '';
+  document.getElementById('newImage').value = '';
+  document.getElementById('addItemForm').style.display = 'none';
+  alert('Item added globally!');
+});
+
+// Auto-Refresh so the page updates if you make a change in the Admin panel in another tab
+window.addEventListener('storage', (e) => {
+  if (e.key === 'adminMenuData') loadMenu();
+});
+
+loadMenu();
+</script>
+</body>
+</html>
