@@ -23,7 +23,7 @@
   ],
   "snackColumn2": [
     { "name": "Chips", "price": "$1.00", "img": "../images/Chips.webp", "outOfStock": false },
-    { "name": "Popcorn", "price": "$1.00", "img": "../images/Popcorn.jpg", "outOfStock": false },
+    { "name": "Popcorn", "price": "$1.00", "img": "../images/popcorn.jpg", "outOfStock": false },
     { "name": "Jerky", "price": "$2.50", "img": "../images/Jerky.jpg", "outOfStock": false },
     { "name": "Pickle", "price": "$1.00", "img": "../images/Pickle.jpg", "outOfStock": false }
   ]
