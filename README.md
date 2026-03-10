@@ -40,14 +40,15 @@ menu1-main/
 ├── main/
 │   ├── index.html          ← TV Display (auto-refresh)
 │   └── index.css           ← External styles
-├── Baseball theme/
-│   ├── index.html          ← Admin interface
-│   └── themecss/
-│       └── index.css       ← Theme styles
-├── Thanksgiving theme/
-│   ├── index.html          ← Admin interface
-│   └── themecss/
-│       └── index.css       ← Theme styles
+├── baceball theme/
+│   ├── index.html          ← Theme display
+│   └── index.css           ← Theme styles
+├── red & white theme/
+│   ├── index.html          ← Theme display
+│   └── index.css           ← Theme styles
+├── softball theme/
+│   ├── index.html          ← Theme display
+│   └── index.css           ← Theme styles
 ├── images/                 ← Product images
 ├── QUICK_START.md          ← 7-minute setup guide
 ├── README.md               ← This file
