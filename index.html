@@ -17,6 +17,7 @@
 </div>
 
 <div class="content-wrapper">
+  <img src="images/logo.jpg" alt="Farmington Concession Stand Logo" class="site-logo">
   <h1>🍿 Concession Menu</h1>
   <p class="subtitle">Farmington, Arkansas</p>
 
@@ -66,7 +67,7 @@
       <button class="admin-tab" onclick="switchTab('drinkColumn',this)">🥤 Drinks</button>
       <button class="admin-tab" onclick="switchTab('snackColumn',this)">🍿 Snacks</button>
       <button class="admin-tab" onclick="switchTab('snackColumn2',this)">🍪 More Snacks</button>
-      <button class="admin-tab" onclick="switchTab('export',this)">📤 Export/Backup</button>
+      <button class="admin-tab" onclick="switchTab('export',this); generateExport()">📤 Export/Backup</button>
     </div>
 
     <!-- Food Section -->
@@ -173,13 +174,25 @@
     <div class="admin-section" id="tab-export">
       <div class="export-section">
         <h3>📤 Export Menu Data</h3>
-        <p>Copy this JSON and save it to <strong>items.json</strong> to make your changes permanent. The TV displays will automatically pick up the new file.</p>
-        <textarea class="export-area" id="exportArea" readonly placeholder="Click 'Generate Export' to create JSON..."></textarea>
+        <p>Edit this JSON directly <strong>or</strong> paste in a saved JSON, then click <strong>Apply / Import JSON</strong> to load it into the live menu. To make changes permanent across all devices, download and replace <strong>items.json</strong> in your project.</p>
+        <textarea class="export-area" id="exportArea" placeholder="Click 'Generate Export' to create JSON, or paste JSON here to import it..."></textarea>
         <div class="export-buttons">
           <button class="export-btn primary" onclick="generateExport()">📋 Generate Export</button>
           <button class="export-btn primary" onclick="copyExport()">📄 Copy to Clipboard</button>
           <button class="export-btn secondary" onclick="downloadExport()">💾 Download JSON File</button>
+          <button class="export-btn success" onclick="importFromTextarea()">✅ Apply / Import JSON</button>
           <button class="export-btn danger" onclick="resetToJSON()">🔄 Reset to items.json</button>
+        </div>
+      </div>
+
+      <div class="export-section" style="margin-top: 16px;">
+        <h3>📦 Backup Snapshot</h3>
+        <p>A backup is automatically created from <strong>items.json</strong> on first load. Downloaded backups are named with a timestamp and belong in the <strong>backups/</strong> folder in your project. You can load any saved backup file back in at any time.</p>
+        <div class="export-buttons">
+          <button class="export-btn success" onclick="saveAsBackup()">💾 Save Current as Backup</button>
+          <button class="export-btn primary" onclick="restoreFromBackup()">♻️ Restore from Backup</button>
+          <button class="export-btn secondary" onclick="downloadBackup()">⬇️ Download to backups/ folder</button>
+          <button class="export-btn secondary" onclick="loadBackupFromFile()">📂 Load Backup from File</button>
         </div>
       </div>
 
@@ -240,6 +253,12 @@ async function initAdminData() {
   }
 
   const fromStorage = localStorage.getItem('adminMenuData');
+
+  // Save items.json as backup if we don't have one yet
+  if (fromFile && !localStorage.getItem('menuBackupData')) {
+    localStorage.setItem('menuBackupData', JSON.stringify(fromFile));
+    console.log('Backup created from items.json');
+  }
 
   if (fromStorage) {
     // Use localStorage data (live edits)
@@ -475,6 +494,35 @@ function generateExport() {
   document.getElementById('exportArea').value = formatted;
 }
 
+function importFromTextarea() {
+  const area = document.getElementById('exportArea');
+  const raw = area.value.trim();
+  if (!raw) {
+    alert('⚠️ Nothing to import. Generate or paste JSON first.');
+    return;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch(e) {
+    alert('❌ Invalid JSON!\n\nFix any syntax errors and try again.\n\nError: ' + e.message);
+    return;
+  }
+  // Validate structure
+  const expected = ['foodColumn','drinkColumn','snackColumn','snackColumn2'];
+  const missing = expected.filter(k => !Array.isArray(parsed[k]));
+  if (missing.length) {
+    alert('⚠️ JSON is missing required keys: ' + missing.join(', ') + '\n\nMake sure the JSON has all four columns.');
+    return;
+  }
+  if (!confirm('✅ Import this JSON as the live menu?\n\nThis will replace all current items with what is in the editor.')) return;
+  menuData = parsed;
+  normalizeData();
+  saveData();
+  renderAll();
+  alert('✅ JSON imported successfully! The live menu has been updated.');
+}
+
 function copyExport() {
   const area = document.getElementById('exportArea');
   if (!area.value) generateExport();
@@ -517,6 +565,87 @@ async function resetToJSON() {
   menuData = null;
   await initAdminData();
   alert('✅ Data reset successfully!\n\nAll live edits have been cleared. Now showing data from items.json.');
+}
+
+// ── Backup Functions ──────────────────────────────────────────────────────────
+function saveAsBackup() {
+  if (!menuData) return;
+  if (!confirm('Save current menu as the backup snapshot?\n\nThis will overwrite the existing backup.')) return;
+  localStorage.setItem('menuBackupData', JSON.stringify(menuData));
+  const t = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  alert('Backup saved at ' + t + '.\n\nYou can restore to this snapshot at any time using "Restore from Backup".');
+}
+
+function restoreFromBackup() {
+  const raw = localStorage.getItem('menuBackupData');
+  if (!raw) {
+    alert('No backup found.\n\nA backup is created automatically the first time items.json loads. You can also save one manually using "Save as Backup".');
+    return;
+  }
+  const backup = JSON.parse(raw);
+  const itemCount = Object.values(backup).reduce((n, col) => n + (col||[]).length, 0);
+  if (!confirm('Restore from backup?\n\nThis will replace the live menu with the backup snapshot (' + itemCount + ' items).\n\nCurrent live edits will be lost.')) return;
+  menuData = backup;
+  normalizeData();
+  saveData();
+  renderAll();
+  generateExport();
+  alert('Restored from backup successfully!');
+}
+
+function downloadBackup() {
+  const raw = localStorage.getItem('menuBackupData');
+  if (!raw) {
+    alert('No backup found. Use "Save as Backup" first.');
+    return;
+  }
+  const now = new Date();
+  const stamp = now.getFullYear() + '-' +
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0') + '_' +
+    String(now.getHours()).padStart(2,'0') + '-' +
+    String(now.getMinutes()).padStart(2,'0');
+  const filename = 'backups/items.backup.' + stamp + '.json';
+  const blob = new Blob([raw], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert('Downloaded to your Downloads folder.\n\nFilename: ' + filename + '\n\nMove it into the backups/ folder in your project to keep it alongside the site files.');
+}
+
+function loadBackupFromFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        const expected = ['foodColumn','drinkColumn','snackColumn','snackColumn2'];
+        const missing = expected.filter(k => !Array.isArray(parsed[k]));
+        if (missing.length) {
+          alert('Invalid backup file — missing keys: ' + missing.join(', '));
+          return;
+        }
+        const itemCount = Object.values(parsed).reduce((n, col) => n + col.length, 0);
+        if (!confirm('Load "' + file.name + '" as backup?\n\n' + itemCount + ' items found.\n\nThis will set it as the active backup snapshot (does not affect the live menu until you click Restore).')) return;
+        localStorage.setItem('menuBackupData', JSON.stringify(parsed));
+        alert('Backup loaded from file!\n\nClick "Restore from Backup" to apply it to the live menu.');
+      } catch(e) {
+        alert('Could not read file — invalid JSON.\n\n' + e.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 // ── Utility Functions ────────────────────────────────────────────────────────
