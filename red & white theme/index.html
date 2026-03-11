@@ -55,72 +55,32 @@
 <img src="../images/logo.jpg" class="bottom-right-image" alt="Logo">
 
 <script>
-function saveStatus() {
-  const items = {foodColumn:[], drinkColumn:[], snackColumn:[], snackColumn2:[]};
-  ['foodColumn','drinkColumn','snackColumn','snackColumn2'].forEach(col => {
-    document.querySelectorAll(`#${col} .item`).forEach(item => {
-      items[col].push({
-        name: item.querySelector('.item-name').textContent.trim(),
-        price: item.querySelector('.item-price').textContent.trim(),
-        img: item.querySelector('img') ? item.querySelector('img').getAttribute('src') : '',
-        outOfStock: item.classList.contains('out-of-stock')
-      });
-    });
-  });
-  localStorage.setItem('adminMenuData', JSON.stringify(items));
-}
+const AUTO_REFRESH_INTERVAL = 30000;
+let refreshTimer = null;
 
-function attachToggle(item, column) {
-  const handler = () => {
-    item.classList.toggle('out-of-stock');
-    column.removeChild(item);
-    if (item.classList.contains('out-of-stock')) {
-      column.appendChild(item);
-    } else {
-      const firstOut = column.querySelector('.out-of-stock');
-      firstOut ? column.insertBefore(item, firstOut) : column.appendChild(item);
-    }
-    saveStatus();
-  };
-  item.addEventListener('click', handler);
-  item.addEventListener('keypress', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); handler(); } });
-}
-
-function attachRemoveBtn(item) {
-  const btn = document.createElement('button');
-  btn.className = 'remove-btn';
-  btn.textContent = '✕';
-  btn.setAttribute('aria-label', 'Remove item');
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    if (confirm('Remove this item?')) { item.remove(); saveStatus(); }
-  });
-  item.appendChild(btn);
-}
-
-function buildItem(data, column) {
+function buildItem(data) {
   const div = document.createElement('div');
   div.className = 'item' + (data.outOfStock ? ' out-of-stock' : '');
-  div.setAttribute('tabindex', '0');
   div.innerHTML = `
-    <img src="${data.img}" alt="${data.name}" onerror="this.style.display='none'">
+    <img src="${data.img}" alt="${escapeHtml(data.name)}" onerror="this.style.display='none'">
     <div class="item-text">
-      <p class="item-name">${data.name}</p>
-      <p class="item-price">${data.price}</p>
-    </div>`;
-  attachToggle(div, column);
-  attachRemoveBtn(div);
+      <p class="item-name">${escapeHtml(data.name)}</p>
+      <p class="item-price">${escapeHtml(data.price)}</p>
+    </div>
+    ${data.outOfStock ? '<div class="out-of-stock-badge">OUT OF STOCK</div>' : ''}
+  `;
   return div;
 }
 
 async function loadMenu() {
   try {
-    let data;
-    // ALWAYS check global Admin data first!
+    let data = null;
     const savedData = localStorage.getItem('adminMenuData');
     if (savedData) {
-      data = JSON.parse(savedData);
-    } else {
+      try { data = JSON.parse(savedData); } catch (e) {}
+    }
+    
+    if (!data) {
       const res = await fetch('../items.json');
       if (!res.ok) throw new Error('Fetch failed');
       data = await res.json();
@@ -131,50 +91,46 @@ async function loadMenu() {
 
     ['foodColumn', 'drinkColumn', 'snackColumn', 'snackColumn2'].forEach(colName => {
       const column = document.getElementById(colName);
-      // Clear old items on refresh
       const items = Array.from(column.children);
-      items.forEach(item => { if (!item.classList.contains('menu-header')) item.remove(); });
-      
+      items.forEach(item => {
+        if (!item.classList.contains('menu-header')) item.remove();
+      });
       (data[colName] || []).forEach(itemData => {
-        column.appendChild(buildItem(itemData, column));
+        column.appendChild(buildItem(itemData));
       });
     });
-  } catch(e) {
+  } catch (err) {
     document.getElementById('loadingMsg').style.display = 'none';
     document.getElementById('errorMsg').style.display = 'block';
   }
 }
 
-document.getElementById('addItemBtn')?.addEventListener('click', () => {
-  const form = document.getElementById('addItemForm');
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
-});
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(loadMenu, AUTO_REFRESH_INTERVAL);
+}
 
-document.getElementById('saveNewItem').addEventListener('click', () => {
-  const category = document.getElementById('newCategory').value;
-  const name  = document.getElementById('newName').value.trim();
-  const price = document.getElementById('newPrice').value.trim();
-  const img   = document.getElementById('newImage').value.trim();
-  if (!name || !price || !img) { alert('Please fill all fields!'); return; }
-  
-  const column = document.getElementById(category);
-  const item = buildItem({ name, price: price.startsWith('$') ? price : '$'+price, img, outOfStock: false }, column);
-  column.appendChild(item);
-  saveStatus(); // Automatically syncs across everything
-  
-  document.getElementById('newName').value = '';
-  document.getElementById('newPrice').value = '';
-  document.getElementById('newImage').value = '';
-  document.getElementById('addItemForm').style.display = 'none';
-  alert('Item added globally!');
-});
-
-// Auto-Refresh so the page updates if you make a change in the Admin panel in another tab
 window.addEventListener('storage', (e) => {
   if (e.key === 'adminMenuData') loadMenu();
 });
 
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return String(unsafe).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (refreshTimer) clearInterval(refreshTimer);
+  } else {
+    loadMenu();
+    startAutoRefresh();
+  }
+});
+
 loadMenu();
+startAutoRefresh();
+window.addEventListener('online', loadMenu);
 </script>
 </body>
 </html>
